@@ -1,6 +1,7 @@
 #include "neuron.h"
 #include "gene.h"
-
+#include "genome.h"
+#include "pool.h"
 
 int main() {
     gene gene1;
