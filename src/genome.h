@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include "neuron.h"
+#include "config.h"
 
 //forward declaration of pool
 class pool;
@@ -23,10 +24,10 @@ public:
                         genome(genome &copyGenome);
     static genome       basicGenome(pool *poolPointer);
 
-    static genome       crossover(genome &genome1, genome &genome2);
-    static double       disjoint(genome &genome1, genome &genome2);
-    static double       weights(genome &genome1, genome &genome2);
-    static bool         sameSpecies(genome &genome1, genome &genome2);
+    static genome       crossover(genome *genome1, genome *genome2);
+    static double       disjoint(genome *genome1, genome *genome2);
+    static double       weights(genome *genome1, genome *genome2);
+    static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
     double              evaluate(std::vector<double> inputs);

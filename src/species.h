@@ -3,6 +3,12 @@
 
 #include <vector>
 #include "genome.h"
+#include <limits>
+#include <random>
+#include <cmath>
+
+extern std::mt19937 gen;
+extern std::uniform_real_distribution<> dis;
 
 class species{
 public:
