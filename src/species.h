@@ -19,7 +19,7 @@ public:
 
                     species();
     void            calculateAverageFitness();
-    genome          breedChild();
+    genome*         breedChild();
 
 };
 

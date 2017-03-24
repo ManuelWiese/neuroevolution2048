@@ -4,8 +4,14 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <random>
+#include <algorithm>
+#include <cmath>
 #include "neuron.h"
 #include "config.h"
+
+extern std::mt19937 gen;
+extern std::uniform_real_distribution<> dis;
 
 //forward declaration of pool
 class pool;
@@ -20,11 +26,11 @@ public:
     pool                                *poolPointer;
     std::map<unsigned short, neuron*>   neurons;
 
-                        genome();
+                        genome(pool *poolPtr);
                         genome(genome &copyGenome);
     static genome       basicGenome(pool *poolPointer);
 
-    static genome       crossover(genome *genome1, genome *genome2);
+    static genome*      crossover(genome *genome1, genome *genome2);
     static double       disjoint(genome *genome1, genome *genome2);
     static double       weights(genome *genome1, genome *genome2);
     static bool         sameSpecies(genome *genome1, genome *genome2);
