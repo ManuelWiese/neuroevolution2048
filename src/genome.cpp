@@ -168,6 +168,240 @@ double genome::calculateNeuron(unsigned short neuronNumber){
     return tmp->value;
 }
 
-double genome::evaluate(std::vector<double> inputs){
-    
+std::vector<double> genome::evaluate(std::vector<double> inputs){
+    for(auto const& tmp : neurons)
+        neurons[tmp.first]->calculated = false;
+
+    for(unsigned short i = 0; i < poolPointer->inputs; i++){
+        neurons[i]->value = inputs[i];
+        neurons[i]->calculated = true;
+        neurons[i]->activated |= inputs[i] != 0.0;
+    }
+
+    std::vector<double> output;
+
+    for(unsigned short i = 0; i < poolPointer->outputs; i++){
+        neurons[MAX_NODES - poolPointer->outputs + i]->calculated = false;
+        output.push_back(calculateNeuron(MAX_NODES - poolPointer->outputs + i));
+    }
+
+    return output;
+
+}
+
+bool genome::containsGene(gene* inputGene){
+    for(auto const& x : genes){
+        if(x->into == inputGene->into && x->out == inputGene->out)
+            return true;
+    }
+    return false;
+}
+
+unsigned short genome::randomNeuron(bool includeInput){
+    std::vector<unsigned short> possible;
+    for(auto const& x : neurons){
+        if(includeInput || !isInputNeuron(x.first))
+            if(x.second->activated)
+                possible.push_back(x.first);
+    }
+    if(possible.size() > 0){
+        unsigned short pick = (int)(dis(gen) * possible.size());
+        return possible[pick];
+    }
+    //HACK: in first generation, linkMutate will try 0->0 every time...
+    return 0;
+}
+
+bool genome::isInputNeuron(unsigned short neuronNumber){
+    return(neuronNumber < poolPointer->inputs);
+}
+
+bool genome::isOutputNeuron(unsigned short neuronNumber){
+    return(neuronNumber >= MAX_NODES - poolPointer->outputs && neuronNumber < MAX_NODES);
+}
+
+
+bool genome::areConnected(unsigned short neuron1, unsigned short neuron2){
+    if(isOutputNeuron(neuron1))
+        return false;
+    if(isInputNeuron(neuron2))
+        return false;
+    for(auto const& tmp : genes){
+        if(tmp->into == neuron1){
+            if(tmp->out == neuron2)
+                return true;
+            if(areConnected(tmp->out, neuron2))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
+    if(isInputNeuron(neuron2))
+        return false;
+    if(isOutputNeuron(neuron1))
+        return false;
+    if(neuron1 == neuron2)
+        return false;
+    if(!neurons[neuron1]->activated)
+        return false;
+    if(areConnected(neuron2, neuron1))
+        return false;
+    return true;
+}
+
+void genome::mutate(){
+    for(auto const& mutation : mutationRates){
+        if(dis(gen)> 0.5)
+            mutationRates[mutation.first] *= 0.95;
+        else
+            mutationRates[mutation.first] /= 0.95;
+        if(!mutation.first.compare("step"))
+            continue;
+        double p = mutation.second;
+        while(p > 0){
+            if(dis(gen) < p){
+                if(!mutation.first.compare("weight"))
+                    weightMutate();
+                else if(!mutation.first.compare("link"))
+                    linkMutate();
+                else if(!mutation.first.compare("bias"))
+                    biasMutate();
+                else if(!mutation.first.compare("node"))
+                    nodeMutate();
+                else if(!mutation.first.compare("enable"))
+                    disableToEnableMutate();
+                else if(!mutation.first.compare("disable"))
+                    enableToDisableMutate();
+                else if(!mutation.first.compare("transfer"))
+                    transferMutate();
+            }
+            p -= 1.0;
+        }
+    }
+}
+
+void genome::weightMutate(){
+    if(!genes.size())
+        return;
+    gene* pick = genes[(int)(dis(gen)*genes.size())];
+    if(!pick->enabled)
+        return;
+    if(dis(gen) < PERTUBCHANCE)
+        pick->weight += (dis(gen) - 0.5) * mutationRates["step"];
+    else
+        pick->weight = (dis(gen) - 0.5) * WEIGHT_RANGE;
+}
+
+void genome::linkMutate(){
+    unsigned short neuron1 = randomNeuron(true);
+    unsigned short neuron2 = randomNeuron(false);
+
+    if(!linkAllowed(neuron1, neuron2)){
+        if(linkAllowed(neuron2, neuron1)){
+            unsigned short tmp = neuron1;
+            neuron1 = neuron2;
+            neuron2 = tmp;
+        } else {
+            return;
+        }
+    }
+
+    gene* newGene = new gene();
+    newGene->into = neuron1;
+    newGene->out = neuron2;
+
+    if(containsGene(newGene))
+        return;
+
+    newGene->innovation = poolPointer->newInnovation();
+    newGene->weight = (dis(gen) - 0.5)*WEIGHT_RANGE;
+    genes.push_back(newGene);
+    neurons[neuron2]->addIncoming(newGene);
+}
+
+void genome::biasMutate(){
+    unsigned short pick = randomNeuron(false);
+    if(dis(gen) < PERTUBCHANCE){
+        neurons[pick]->bias += (dis(gen) - 0.5) * mutationRates["step"];
+    } else {
+        neurons[pick]->bias = (dis(gen) - 0.5) * BIAS_RANGE;
+    }
+}
+
+void genome::nodeMutate(){
+    if(!genes.size())
+        return;
+
+    unsigned short randomIndex = (int)(dis(gen)*genes.size());
+    if(!genes[randomIndex]->enabled)
+        return;
+
+    gene* oldGene = genes[randomIndex];
+    neurons[oldGene->out]->removeIncoming(oldGene);
+    oldGene->enabled = false;
+
+    maxneuron += 1;
+
+    gene* gene1 = new gene();
+    gene1->out = maxneuron;
+    gene1->into = oldGene->into;
+    gene1->weight = 1.0;
+    gene1->innovation = poolPointer->newInnovation();
+    genes.push_back(gene1);
+    neurons[gene1->out] = new neuron();
+    neurons[gene1->out]->transfer = &neuron::id;
+    neurons[gene1->out]->addIncoming(gene1);
+
+    gene* gene2 = new gene();
+    gene2->out = oldGene->out;
+    gene2->into = maxneuron;
+    gene2->weight = oldGene->weight;
+    gene2->innovation = poolPointer->newInnovation();
+    genes.push_back(gene2);
+    neurons[gene2->out]->addIncoming(gene2);
+}
+
+void genome::enableToDisableMutate(){
+    std::vector<gene*> candidates;
+    for(auto const& x : genes){
+        if(x->enabled)
+            candidates.push_back(x);
+    }
+
+    if(!candidates.size())
+        return;
+
+    gene* pick = candidates[(int)(dis(gen)*candidates.size())];
+    pick->enabled = false;
+    neurons[pick->out]->removeIncoming(pick);
+}
+
+void genome::disableToEnableMutate(){
+    std::vector<gene*> candidates;
+    for(auto const& x : genes){
+        if(!x->enabled)
+            candidates.push_back(x);
+    }
+
+    if(!candidates.size())
+        return;
+
+    gene* pick = candidates[(int)(dis(gen)*candidates.size())];
+    pick->enabled = true;
+    neurons[pick->out]->addIncoming(pick);
+}
+
+void genome::transferMutate(){
+    unsigned short randomIndex = randomNeuron(false);
+    double pick = dis(gen);
+    if(pick < 0.25)
+        neurons[randomIndex]->transfer = &neuron::sigmoid;
+    else if(pick < 0.5)
+        neurons[randomIndex]->transfer = &neuron::step;
+    else if(pick < 0.75)
+        neurons[randomIndex]->transfer = &neuron::slope;
+    else
+        neurons[randomIndex]->transfer = &neuron::id;
 }

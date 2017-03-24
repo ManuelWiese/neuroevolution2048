@@ -34,6 +34,10 @@ double neuron::slope(double x){
     return x;
 }
 
+double neuron::id(double x){
+    return x;
+}
+
 void neuron::addIncoming(gene *geneIncoming){
     incoming.push_back(geneIncoming);
 }

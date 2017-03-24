@@ -21,7 +21,7 @@ public:
     static double       sigmoid(double x);
     static double       step(double x);
     static double       slope(double x);
-
+    static double       id(double x);
 
     void                addIncoming(gene *geneIncoming);
     bool                removeIncoming(gene *geneIncoming);

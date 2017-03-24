@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include "neuron.h"
+#include "gene.h"
 #include "config.h"
 
 extern std::mt19937 gen;
@@ -36,7 +37,7 @@ public:
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
-    double              evaluate(std::vector<double> inputs);
+    std::vector<double> evaluate(std::vector<double> inputs);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);
