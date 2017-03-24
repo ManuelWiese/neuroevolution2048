@@ -24,6 +24,7 @@ genome::genome(pool *poolPtr){
 
     for( unsigned int i = 0; i < poolPointer->outputs; i++){
         neurons[i + MAX_NODES - poolPointer->outputs] = new neuron();
+        neurons[i + MAX_NODES - poolPointer->outputs]->activated = true;
     }
 }
 
@@ -61,7 +62,7 @@ genome* genome::basicGenome(pool *poolPtr){
 }
 
 genome* genome::crossover(genome* genome1, genome* genome2){
-    if(genome1->fitness > genome2->fitness){
+    if(genome2->fitness > genome1->fitness){
         genome *tmpGenome = genome1;
         genome1 = genome2;
         genome2 = tmpGenome;
@@ -69,6 +70,7 @@ genome* genome::crossover(genome* genome1, genome* genome2){
     genome *child = new genome(genome1->poolPointer);
 
     for( auto const& x : genome1->neurons){
+        child->neurons[x.first] = new neuron();
         child->neurons[x.first]->transfer = x.second->transfer;
         child->neurons[x.first]->bias = x.second->bias;
     }

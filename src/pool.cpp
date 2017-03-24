@@ -148,7 +148,7 @@ void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
     printf("%d  %d  %f  %f\n", currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness);
     currentGenome += 1;
-    if(currentGenome > currentGenomes.size()){
+    if(currentGenome >= currentGenomes.size()){
         currentGenome = 0;
         currentSpecies += 1;
         if(currentSpecies >= speciesVector.size()){

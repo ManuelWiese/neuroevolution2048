@@ -4,7 +4,7 @@ BIN_NAME := neuronal2048
 
 CPP_FILES := $(wildcard $(SOURCE_FOLDER)*.cpp)
 OBJ_FILES := $(addprefix $(OBJECTS_FOLDER),$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS := -static-libstdc++
+LD_FLAGS :=
 
 ifndef CXX
 CXX := g++
@@ -14,7 +14,7 @@ CC_FLAGS := -std=c++0x -O3
 
 all: main
 
-debug: CC_FLAGS := -std=c++0x -O3 -march=native -flto -DDEBUG -g
+debug: CC_FLAGS := -std=c++0x -O3 -g
 debug: main
 
 main: $(OBJ_FILES)
