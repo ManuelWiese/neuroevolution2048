@@ -11,26 +11,18 @@ std::mt19937 gen(rd());
 std::uniform_real_distribution<> dis(0, 1);
 
 int main() {
-    gene gene1;
-    gene1.into = 10;
-    gene gene2(gene1);
-    gene2.out = 20;
-    gene1.print();
-    gene2.print();
-
-    neuron neuron1;
-    printf("%f\n", neuron1.transfer(1));
-    neuron1.transfer = &neuron::slope;
-    printf("%f\n", neuron1.transfer(1));
-
-    neuron1.addIncoming(&gene1);
-    neuron1.addIncoming(&gene2);
-
-    neuron1.print();
-    gene1.into = 33;
-    neuron1.print();
-    neuron1.removeIncoming(&gene1);
-    neuron1.print();
-    neuron1.removeIncoming(&gene1);
-
+    pool mainPool(1, 1, 300);
+    while(true){
+        genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
+        std::vector<double> input;
+        std::vector<double> result;
+        input.push_back(dis(gen));
+        result.push_back(sin(input[0]));
+        std::vector<double> output = currentGenome->evaluate(input);
+        double fitness = 1.0/(pow(result[0]-output[0],2));
+        currentGenome->fitness = fitness;
+        if(fitness > mainPool.maxFitness)
+            mainPool.maxFitness = fitness;
+        mainPool.nextGenome();
+    }
 }

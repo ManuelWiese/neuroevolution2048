@@ -18,14 +18,14 @@ public:
     unsigned short          inputs;
     unsigned short          outputs;
 
-                        pool();
+                        pool(unsigned short inputs, unsigned short outputs, unsigned short population);
     unsigned short      newInnovation();
     void                rankGenomes();
     double              getAverageFitness();
     void                cullSpecies(bool cutToOne);
     void                removeStaleSpecies();
     void                removeWeakSpecies();
-    void                addToSpecies(genome child);
+    void                addToSpecies(genome* child);
     void                newGeneration();
     void                nextGenome();
 };

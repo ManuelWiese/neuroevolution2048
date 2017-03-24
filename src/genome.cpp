@@ -52,10 +52,10 @@ genome::genome(genome &copyGenome) {
 
 }
 
-genome genome::basicGenome(pool *poolPtr){
-    genome outputGenome(poolPtr);
-    outputGenome.maxneuron = poolPtr->inputs -1;
-    outputGenome.mutate();
+genome* genome::basicGenome(pool *poolPtr){
+    genome* outputGenome = new genome(poolPtr);
+    outputGenome->maxneuron = poolPtr->inputs -1;
+    outputGenome->mutate();
 
     return outputGenome;
 }

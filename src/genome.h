@@ -29,7 +29,7 @@ public:
 
                         genome(pool *poolPtr);
                         genome(genome &copyGenome);
-    static genome       basicGenome(pool *poolPointer);
+    static genome*      basicGenome(pool *poolPointer);
 
     static genome*      crossover(genome *genome1, genome *genome2);
     static double       disjoint(genome *genome1, genome *genome2);
