@@ -40,8 +40,9 @@ void pool::rankGenomes(){
     }
     std::sort(tmpGenomes.begin(), tmpGenomes.end(), compareByFitness);
 
-    for( unsigned short i = 0; i < tmpGenomes.size(); i++)
+    for( unsigned short i = 0; i < tmpGenomes.size(); i++){
         tmpGenomes[i]->globalRank = i + 1;
+    }
 }
 
 double pool::getAverageFitness(){
@@ -62,7 +63,7 @@ void pool::cullSpecies(bool cutToOne){
         if(cutToOne)
             remaining = 1;
         else
-            remaining = ceil(spec->genomes.size() / 2);
+            remaining = ceil(spec->genomes.size() / 2.0);
         spec->genomes.erase(spec->genomes.begin()+remaining, spec->genomes.end());
     }
 }
@@ -146,7 +147,7 @@ void pool::newGeneration(){
 
 void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
-    printf("%d  %d  %f  %f\n", currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness);
+    printf("%d  %d  %d  %f  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness);
     currentGenome += 1;
     if(currentGenome >= currentGenomes.size()){
         currentGenome = 0;

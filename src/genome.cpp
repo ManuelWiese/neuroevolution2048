@@ -29,12 +29,19 @@ genome::genome(pool *poolPtr){
 }
 
 genome::genome(genome &copyGenome) {
-    fitness = 0;
+    fitness = std::numeric_limits<double>::min();
     maxneuron = copyGenome.maxneuron;
     globalRank = 0;
+
+    for(auto const& x : copyGenome.genes){
+        gene* copyGene = new gene(*x);
+        genes.push_back(copyGene);
+    }
+
     for (auto const& x : copyGenome.mutationRates){
         mutationRates[x.first] = x.second;
     }
+    mutationRates["step"] = STEPSIZE;
 
     poolPointer = copyGenome.poolPointer;
 

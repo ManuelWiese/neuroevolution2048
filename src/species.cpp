@@ -8,7 +8,7 @@ species::species(){
 
 void species::calculateAverageFitness(){
     double tmpSum = 0;
-    for ( auto &genome : genomes ) {
+    for ( auto &genome : genomes ){
         tmpSum += genome->globalRank;
     }
     averageFitness = tmpSum / genomes.size();
@@ -18,11 +18,11 @@ void species::calculateAverageFitness(){
 genome* species::breedChild(){
     genome *child;
     if( dis(gen) < CROSSOVER_CHANCE) {
-        child = genome::crossover(genomes[(int)genomes.size() * dis(gen)],
-                                  genomes[(int)genomes.size() * dis(gen)]
+        child = genome::crossover(genomes[(int)(genomes.size() * dis(gen))],
+                                  genomes[(int)(genomes.size() * dis(gen))]
                                  );
     } else
-        child = new genome(*genomes[(int)genomes.size() * dis(gen)]);
+        child = new genome(*genomes[(int)(genomes.size() * dis(gen))]);
     child->mutate();
     return child;
 }
