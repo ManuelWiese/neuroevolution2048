@@ -267,7 +267,9 @@ void game::autoSolve() {
     std::ofstream generationFile;
     generationFile.open(mainPool.timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
     std::vector<double> generationScore;
-    while(true){
+    //unsigned short counter = 0;
+    while(true/*counter < 2*/){
+        //counter++;
         double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
         for(unsigned short run = 0; run < runsPerNetwork; run++){

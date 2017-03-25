@@ -22,6 +22,17 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     }
 }
 
+pool::~pool(){
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            for(auto const& gen: genom->genes)
+                delete gen;
+            delete genom;
+        }
+        delete spec;
+    }
+}
+
 unsigned short pool::newInnovation(){
     innovation += 1;
     return innovation;
@@ -64,6 +75,13 @@ void pool::cullSpecies(bool cutToOne){
             remaining = 1;
         else
             remaining = ceil(spec->genomes.size() / 2.0);
+
+        for(unsigned int i = remaining; i < spec->genomes.size(); i++){
+            for(auto const& gen : spec->genomes[i]->genes){
+                delete gen;
+            }
+            delete spec->genomes[i];
+        }
         spec->genomes.erase(spec->genomes.begin()+remaining, spec->genomes.end());
     }
 }
@@ -84,6 +102,15 @@ void pool::removeStaleSpecies(){
         }
         if(spec->staleness < STALE_SPECIES || spec->topFitness >= maxFitness)
             survived.push_back(spec);
+        else {
+            for(auto const& genom : spec->genomes){
+                for(auto const& gen : genom->genes){
+                    delete gen;
+                }
+                delete genom;
+            }
+            delete spec;
+        }
     }
     if(!survived.size()){
         std::sort(speciesVector.begin(), speciesVector.end(), compareSpeciesByTopFitness);
@@ -98,6 +125,15 @@ void pool::removeWeakSpecies(){
     for(auto const& spec : speciesVector){
         if(floor(spec->averageFitness/sum) >= 1)
             survived.push_back(spec);
+        else{
+            for(auto const& genom : spec->genomes){
+                for(auto const& gen : genom->genes){
+                    delete gen;
+                }
+                delete genom;
+            }
+            delete spec;
+        }
     }
     speciesVector = survived;
 }

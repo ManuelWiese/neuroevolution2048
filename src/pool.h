@@ -19,6 +19,7 @@ public:
     unsigned short          outputs;
 
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
+                        ~pool();
     unsigned short      newInnovation();
     void                rankGenomes();
     double              getAverageFitness();

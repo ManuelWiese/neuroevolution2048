@@ -14,7 +14,7 @@ CC_FLAGS := -std=c++0x -O3
 
 all: main
 
-debug: CC_FLAGS := -std=c++0x -O3 -g
+debug: CC_FLAGS := -std=c++0x -O0 -g
 debug: main
 
 main: $(OBJ_FILES)
