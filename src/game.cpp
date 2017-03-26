@@ -257,7 +257,7 @@ std::vector<unsigned char> game::sortOutput(std::vector<double> output){
 }
 
 void game::autoSolve() {
-    unsigned short runsPerNetwork = 10;
+    unsigned short runsPerNetwork = 1;
     std::array<unsigned int, N> oldField = field;
     unsigned int oldScore = score;
 
@@ -268,7 +268,7 @@ void game::autoSolve() {
     generationFile.open(mainPool.timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
     std::vector<double> generationScore;
     //unsigned short counter = 0;
-    while(true/*counter < 2*/){
+    while(true/*counter < 20*/){
         //counter++;
         double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];

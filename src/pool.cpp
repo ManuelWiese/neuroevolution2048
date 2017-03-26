@@ -27,6 +27,8 @@ pool::~pool(){
         for(auto const& genom : spec->genomes){
             for(auto const& gen: genom->genes)
                 delete gen;
+            for(auto const& neur : genom->neurons)
+                delete neur.second;
             delete genom;
         }
         delete spec;
@@ -80,15 +82,18 @@ void pool::cullSpecies(bool cutToOne){
             for(auto const& gen : spec->genomes[i]->genes){
                 delete gen;
             }
+            for(auto const& neur : spec->genomes[i]->neurons){
+                delete neur.second;
+            }
             delete spec->genomes[i];
         }
         spec->genomes.erase(spec->genomes.begin()+remaining, spec->genomes.end());
     }
 }
 
-static bool compareSpeciesByTopFitness(species* a, species* b){
+/*static bool compareSpeciesByTopFitness(species* a, species* b){
     return b->topFitness < a->topFitness;
-}
+}*/
 
 void pool::removeStaleSpecies(){
     std::vector<species*> survived;
@@ -107,14 +112,20 @@ void pool::removeStaleSpecies(){
                 for(auto const& gen : genom->genes){
                     delete gen;
                 }
+                for(auto const& neur : genom->neurons){
+                    delete neur.second;
+                }
                 delete genom;
             }
             delete spec;
         }
     }
     if(!survived.size()){
-        std::sort(speciesVector.begin(), speciesVector.end(), compareSpeciesByTopFitness);
-        survived.push_back(speciesVector[0]);
+        //Since everything is free, this cannot work anymore
+        //std::sort(speciesVector.begin(), speciesVector.end(), compareSpeciesByTopFitness);
+        //survived.push_back(speciesVector[0]);
+        printf("ERROR: survived.size() == 0");
+        exit;
     }
     speciesVector = survived;
 }
@@ -129,6 +140,9 @@ void pool::removeWeakSpecies(){
             for(auto const& genom : spec->genomes){
                 for(auto const& gen : genom->genes){
                     delete gen;
+                }
+                for(auto const& neur : genom->neurons){
+                    delete neur.second;
                 }
                 delete genom;
             }

@@ -76,6 +76,11 @@ genome* genome::crossover(genome* genome1, genome* genome2){
     }
     genome *child = new genome(genome1->poolPointer);
 
+    //delete input and output neurons, since they will be created in next loop
+    for(auto const& neur : child->neurons){
+        delete neur.second;
+    }
+
     for( auto const& x : genome1->neurons){
         child->neurons[x.first] = new neuron();
         child->neurons[x.first]->transfer = x.second->transfer;
@@ -321,8 +326,10 @@ void genome::linkMutate(){
     newGene->into = neuron1;
     newGene->out = neuron2;
 
-    if(containsGene(newGene))
+    if(containsGene(newGene)){
+        delete newGene;
         return;
+    }
 
     newGene->innovation = poolPointer->newInnovation();
     newGene->weight = (dis(gen) - 0.5)*WEIGHT_RANGE;
