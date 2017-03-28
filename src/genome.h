@@ -53,6 +53,7 @@ public:
     void                enableToDisableMutate();
     void                disableToEnableMutate();
     void                transferMutate();
+    void                deleteDisabledMutate();
 
 };
 

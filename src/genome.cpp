@@ -14,6 +14,7 @@ genome::genome(pool *poolPtr){
     mutationRates["enable"] = ENABLE_MUTATION_CHANCE;
     mutationRates["disable"] = DISBALE_MUTATION_CHANCE;
     mutationRates["transfer"] = TRANSFER_MUTATION_CHANCE;
+    mutationRates["delete"] = DELETE_MUTATION_CHANCE;
     mutationRates["step"] = STEPSIZE;
 
     poolPointer = poolPtr;
@@ -290,6 +291,8 @@ void genome::mutate(){
                     enableToDisableMutate();
                 else if(!mutation.first.compare("transfer"))
                     transferMutate();
+                else if(!mutation.first.compare("delete"))
+                    deleteDisabledMutate();
             }
             p -= 1.0;
         }
@@ -420,4 +423,22 @@ void genome::transferMutate(){
         neurons[randomIndex]->transfer = &neuron::slope;
     else
         neurons[randomIndex]->transfer = &neuron::id;
+}
+
+void genome::deleteDisabledMutate(){
+    std::vector<gene*> candidates;
+    for(auto const& gen: genes){
+        if(!gen->enabled){
+            candidates.push_back(gen);
+        }
+    }
+    if(!candidates.size())
+        return;
+
+    gene* pick = candidates[(int)(dis(gen)*candidates.size())];
+    std::vector<gene*>::iterator it = find (genes.begin(), genes.end(), pick);;
+    if (it != genes.end()) {
+        genes.erase(it);
+    }
+    return;
 }

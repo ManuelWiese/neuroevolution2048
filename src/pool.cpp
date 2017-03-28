@@ -7,7 +7,7 @@
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     //TODO: create timestamp using strstreamer?
-    timestamp = "20170324121838";
+    timestamp = "delete04";
     generation = 0;
     innovation = outputs;
     currentSpecies = 0;
