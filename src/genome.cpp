@@ -86,10 +86,11 @@ genome* genome::crossover(genome* genome1, genome* genome2){
         child->neurons[x.first] = new neuron();
         child->neurons[x.first]->transfer = x.second->transfer;
         child->neurons[x.first]->bias = x.second->bias;
+        child->neurons[x.first]->activated = x.second->activated;
     }
 
     gene* copyGene;
-    std::map<unsigned short, gene*> innovations;
+    std::map<unsigned int, gene*> innovations;
 
     for( auto const& x : genome2->genes){
         innovations[x->innovation] = x;
@@ -122,7 +123,7 @@ double genome::disjoint(genome* genome1, genome* genome2){
     if( genome1->genes.size() == 0 && genome2->genes.size() == 0)
         return 0.0;
 
-    std::vector<unsigned short> innovations;
+    std::vector<unsigned int> innovations;
     for( auto const& x : genome1->genes){
         innovations.push_back(x->innovation);
     }
@@ -139,7 +140,7 @@ double genome::disjoint(genome* genome1, genome* genome2){
 }
 
 double genome::weights(genome* genome1, genome* genome2){
-    std::map<unsigned short, gene*> innovations;
+    std::map<unsigned int, gene*> innovations;
     for( auto const& x : genome2->genes)
         innovations[x->innovation] = x;
 
@@ -267,6 +268,24 @@ bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
 }
 
 void genome::mutate(){
+    unsigned int disabledGenes = 0;
+    unsigned int enabledGenes;
+    for(auto const& gen: genes){
+        if(!gen->enabled){
+            disabledGenes++;
+        }
+    }
+    enabledGenes = genes.size() - disabledGenes;
+    printf("Genes: %d %d %d\n", genes.size(), enabledGenes, disabledGenes);
+    unsigned int mutableNeurons = neurons.size() - poolPointer->inputs;
+    unsigned int activeNeurons = 0;
+    for(auto const& neur: neurons){
+        if(neur.second->activated)
+            activeNeurons++;
+    }
+    printf("Neurons: %d %d, %d\n", neurons.size(), activeNeurons, mutableNeurons);
+    printf("Innovation: %d\n", poolPointer->innovation);
+
     for(auto const& mutation : mutationRates){
         if(dis(gen)> 0.5)
             mutationRates[mutation.first] *= 0.95;
@@ -275,6 +294,24 @@ void genome::mutate(){
         if(!mutation.first.compare("step"))
             continue;
         double p = mutation.second;
+
+        if(!mutation.first.compare("weight"))
+            p *= 1;//enabledGenes;
+        else if(!mutation.first.compare("link"))
+            p *= 1;//activeNeurons;
+        else if(!mutation.first.compare("bias"))
+            p *= 1;//mutableNeurons;
+        else if(!mutation.first.compare("node"))
+            p *= 1;//enabledGenes;
+        else if(!mutation.first.compare("enable"))
+            p *= 1;//disabledGenes;
+        else if(!mutation.first.compare("disable"))
+            p *= 1;//enabledGenes;
+        else if(!mutation.first.compare("transfer"))
+            p *= 1;//mutableNeurons;
+        else if(!mutation.first.compare("delete"))
+            p *= 1;//disabledGenes;
+
         while(p > 0){
             if(dis(gen) < p){
                 if(!mutation.first.compare("weight"))

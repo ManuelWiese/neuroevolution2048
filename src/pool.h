@@ -10,7 +10,7 @@ public:
     std::string             timestamp;
     std::vector<species*>   speciesVector;
     unsigned short          generation;
-    unsigned short          innovation;
+    unsigned int            innovation;
     unsigned short          currentSpecies;
     unsigned short          currentGenome;
     double                  maxFitness;
@@ -20,7 +20,7 @@ public:
 
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
                         ~pool();
-    unsigned short      newInnovation();
+    unsigned int        newInnovation();
     void                rankGenomes();
     double              getAverageFitness();
     void                cullSpecies(bool cutToOne);

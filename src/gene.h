@@ -9,7 +9,7 @@ public:
     unsigned short  out;
     double          weight;
     bool            enabled;
-    unsigned short  innovation;
+    unsigned int    innovation;
 
     gene();
     gene(gene &copyGene);

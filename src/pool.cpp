@@ -7,7 +7,7 @@
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     //TODO: create timestamp using strstreamer?
-    timestamp = "delete04";
+    timestamp = "segfaultTest";
     generation = 0;
     innovation = outputs;
     currentSpecies = 0;
@@ -35,7 +35,7 @@ pool::~pool(){
     }
 }
 
-unsigned short pool::newInnovation(){
+unsigned int pool::newInnovation(){
     innovation += 1;
     return innovation;
 }
