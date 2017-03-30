@@ -8,6 +8,7 @@
 class neuron{
 public:
     std::vector<gene*>  incoming;
+    std::vector<gene*>  disabledIncoming;
     double              value;
     short               depth;
     double              bias;
@@ -24,7 +25,10 @@ public:
     static double       id(double x);
 
     void                addIncoming(gene *geneIncoming);
-    bool                removeIncoming(gene *geneIncoming);
+    void                removeIncoming(gene *geneIncoming);
+    void                addDisabledIncoming(gene* geneIncoming);
+    void                disableIncoming(gene *geneIncoming);
+    void                enableIncoming(gene *geneIncoming);
 
     void                print();
 };

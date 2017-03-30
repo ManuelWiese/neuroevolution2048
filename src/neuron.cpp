@@ -42,15 +42,35 @@ void neuron::addIncoming(gene *geneIncoming){
     incoming.push_back(geneIncoming);
 }
 
-bool neuron::removeIncoming(gene *geneIncoming){
+void neuron::removeIncoming(gene *geneIncoming){
     std::vector<gene*>::iterator it;
     it = find (incoming.begin(), incoming.end(), geneIncoming);
     if (it != incoming.end()) {
         incoming.erase(it);
-        return true;
+        return;
     }
     printf("Cannot remove gene, gene not found\n");
-    return false;
+    return;
+}
+
+void neuron::addDisabledIncoming(gene *geneIncoming){
+    disabledIncoming.push_back(geneIncoming);
+}
+
+void neuron::disableIncoming(gene *geneIncoming){
+    removeIncoming(geneIncoming);
+    disabledIncoming.push_back(geneIncoming);
+}
+
+void neuron::enableIncoming(gene *geneIncoming){
+    std::vector<gene*>::iterator it = find (disabledIncoming.begin(), disabledIncoming.end(), geneIncoming);
+    if(it != disabledIncoming.end()){
+        disabledIncoming.erase(it);
+        addIncoming(geneIncoming);
+        return;
+    }
+    printf("Cannot remove gene, gene not found\n");
+    return;
 }
 
 void neuron::print(){

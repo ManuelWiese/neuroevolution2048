@@ -56,6 +56,8 @@ genome::genome(genome &copyGenome) {
     for( auto const& gene : genes ){
         if( gene->enabled ){
             neurons[gene->out]->addIncoming(gene);
+        } else{
+            neurons[gene->out]->addDisabledIncoming(gene);
         }
     }
 
@@ -108,6 +110,8 @@ genome* genome::crossover(genome* genome1, genome* genome2){
             copyGene = new gene(*gene1);
         if( copyGene->enabled )
             child->neurons[copyGene->out]->addIncoming(copyGene);
+        else
+            child->neurons[copyGene->out]->addDisabledIncoming(copyGene);
         child->genes.push_back(copyGene);
     }
     child->maxneuron = genome1->maxneuron;
@@ -242,12 +246,20 @@ bool genome::areConnected(unsigned short neuron1, unsigned short neuron2){
         return false;
     if(isInputNeuron(neuron2))
         return false;
-    for(auto const& tmp : genes){
+    for(auto const& tmp : neurons[neuron2]->incoming){
         if(tmp->into == neuron1){
-            if(tmp->out == neuron2)
-                return true;
-            if(areConnected(tmp->out, neuron2))
-                return true;
+            return true;
+        }
+        if(areConnected(neuron1, tmp->into)){
+            return true;
+        }
+    }
+    for(auto const& tmp : neurons[neuron2]->disabledIncoming){
+        if(tmp->into == neuron1){
+            return true;
+        }
+        if(areConnected(neuron1, tmp->into)){
+            return true;
         }
     }
     return false;
@@ -395,7 +407,7 @@ void genome::nodeMutate(){
         return;
 
     gene* oldGene = genes[randomIndex];
-    neurons[oldGene->out]->removeIncoming(oldGene);
+    neurons[oldGene->out]->disableIncoming(oldGene);
     oldGene->enabled = false;
 
     maxneuron += 1;
@@ -431,7 +443,7 @@ void genome::enableToDisableMutate(){
 
     gene* pick = candidates[(int)(dis(gen)*candidates.size())];
     pick->enabled = false;
-    neurons[pick->out]->removeIncoming(pick);
+    neurons[pick->out]->disableIncoming(pick);
 }
 
 void genome::disableToEnableMutate(){
@@ -446,7 +458,7 @@ void genome::disableToEnableMutate(){
 
     gene* pick = candidates[(int)(dis(gen)*candidates.size())];
     pick->enabled = true;
-    neurons[pick->out]->addIncoming(pick);
+    neurons[pick->out]->enableIncoming(pick);
 }
 
 void genome::transferMutate(){
