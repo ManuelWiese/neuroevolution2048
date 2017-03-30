@@ -6,8 +6,14 @@
 #include <iostream>
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
+    char buffer[128];
+    int len;
+    len = std::sprintf(buffer, "%f_%f_%f_%f_%f_%f_%f_%f", LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE, BIAS_MUTATION_CHANCE, 
+                                                    WEIGHT_MUTATION_CHANCE, TRANSFER_MUTATION_CHANCE, DISABLE_MUTATION_CHANCE,
+                                                    ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE);
+    printf("%s", buffer);
     //TODO: create timestamp using strstreamer?
-    timestamp = "segfaultTest";
+    timestamp.assign(buffer, len);
     generation = 0;
     innovation = outputs;
     currentSpecies = 0;

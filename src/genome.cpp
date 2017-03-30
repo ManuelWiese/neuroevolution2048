@@ -12,7 +12,7 @@ genome::genome(pool *poolPtr){
     mutationRates["bias"] = BIAS_MUTATION_CHANCE;
     mutationRates["node"] = NODE_MUTATION_CHANCE;
     mutationRates["enable"] = ENABLE_MUTATION_CHANCE;
-    mutationRates["disable"] = DISBALE_MUTATION_CHANCE;
+    mutationRates["disable"] = DISABLE_MUTATION_CHANCE;
     mutationRates["transfer"] = TRANSFER_MUTATION_CHANCE;
     mutationRates["delete"] = DELETE_MUTATION_CHANCE;
     mutationRates["step"] = STEPSIZE;
@@ -295,22 +295,22 @@ void genome::mutate(){
             continue;
         double p = mutation.second;
 
-        if(!mutation.first.compare("weight"))
-            p *= 1;//enabledGenes;
+        /*if(!mutation.first.compare("weight"))
+            p *= enabledGenes;
         else if(!mutation.first.compare("link"))
-            p *= 1;//activeNeurons;
+            p *= activeNeurons;
         else if(!mutation.first.compare("bias"))
-            p *= 1;//mutableNeurons;
+            p *= mutableNeurons;
         else if(!mutation.first.compare("node"))
-            p *= 1;//enabledGenes;
+            p *= enabledGenes;
         else if(!mutation.first.compare("enable"))
-            p *= 1;//disabledGenes;
+            p *= disabledGenes;
         else if(!mutation.first.compare("disable"))
-            p *= 1;//enabledGenes;
+            p *= enabledGenes;
         else if(!mutation.first.compare("transfer"))
-            p *= 1;//mutableNeurons;
+            p *= mutableNeurons;
         else if(!mutation.first.compare("delete"))
-            p *= 1;//disabledGenes;
+            p *= disabledGenes;*/
 
         while(p > 0){
             if(dis(gen) < p){
