@@ -246,22 +246,34 @@ bool genome::areConnected(unsigned short neuron1, unsigned short neuron2){
         return false;
     if(isInputNeuron(neuron2))
         return false;
+
+    if(neurons[neuron2]->checkedConnection){
+        return neurons[neuron2]->connected;
+    }
+
+    neurons[neuron2]->checkedConnection = true;
+
     for(auto const& tmp : neurons[neuron2]->incoming){
         if(tmp->into == neuron1){
+            neurons[neuron2]->connected = true;
             return true;
         }
         if(areConnected(neuron1, tmp->into)){
+            neurons[neuron2]->connected = true;
             return true;
         }
     }
     for(auto const& tmp : neurons[neuron2]->disabledIncoming){
         if(tmp->into == neuron1){
+            neurons[neuron2]->connected = true;
             return true;
         }
         if(areConnected(neuron1, tmp->into)){
+            neurons[neuron2]->connected = true;
             return true;
         }
     }
+    neurons[neuron2]->connected = false;
     return false;
 }
 
@@ -274,6 +286,9 @@ bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
         return false;
     if(!neurons[neuron1]->activated)
         return false;
+
+    for(auto const& tmp : neurons)
+        neurons[tmp.first]->checkedConnection = false;
     if(areConnected(neuron2, neuron1))
         return false;
     return true;
