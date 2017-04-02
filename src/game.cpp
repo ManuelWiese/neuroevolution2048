@@ -256,6 +256,14 @@ std::vector<unsigned char> game::sortOutput(std::vector<double> output){
     return indices;
 }
 
+static double getMedian(std::vector<double> &input){
+    std::sort(input.begin(), input.end());
+    if(input.size() % 2){
+        return input[(input.size()-1)/2];
+    }
+    return (input[input.size()/2]+input[input.size()/2-1])/2.0;
+}
+
 void game::autoSolve() {
     unsigned short runsPerNetwork = 10;
     unsigned short generations = 150;
@@ -273,6 +281,7 @@ void game::autoSolve() {
         counter++;
         double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
+        std::vector<double> genomeScores;
         for(unsigned short run = 0; run < runsPerNetwork; run++){
             field = oldField;
             score = oldScore;
@@ -291,8 +300,9 @@ void game::autoSolve() {
             meanScore += score;
             scoreFile << score << std::endl;
             generationScore.push_back(score);
+            genomeScores.push_back(score);
         }
-        currentGenome->fitness = meanScore / runsPerNetwork;
+        currentGenome->fitness = getMedian(genomeScores);
         if(currentGenome->fitness > mainPool.maxFitness)
             mainPool.maxFitness = currentGenome->fitness;
         mainPool.nextGenome();
