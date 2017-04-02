@@ -30,6 +30,7 @@ public:
     void                addIncoming(gene *geneIncoming);
     void                removeIncoming(gene *geneIncoming);
     void                addDisabledIncoming(gene* geneIncoming);
+    void                removeDisabledIncoming(gene* geneIncoming);
     void                disableIncoming(gene *geneIncoming);
     void                enableIncoming(gene *geneIncoming);
 

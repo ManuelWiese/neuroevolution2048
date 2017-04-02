@@ -321,6 +321,7 @@ void genome::mutate(){
         if(!mutation.first.compare("step"))
             continue;
         double p = mutation.second;
+        printf("%s %f\n", mutation.first.c_str(), mutation.second);
 
         /*if(!mutation.first.compare("weight"))
             p *= enabledGenes;
@@ -503,6 +504,7 @@ void genome::deleteDisabledMutate(){
     std::vector<gene*>::iterator it = find (genes.begin(), genes.end(), pick);;
     if (it != genes.end()) {
         genes.erase(it);
+        neurons[pick->out]->removeDisabledIncoming(pick);
     }
     return;
 }
