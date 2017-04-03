@@ -28,6 +28,7 @@ public:
     unsigned char getCell(unsigned char i, unsigned char j);
     unsigned char getCell(unsigned char index);
     void setCell(unsigned char i, unsigned char j, unsigned char value);
+    unsigned char getMaxTile();
     std::vector<unsigned char> getHistogram();
     bool moveUp();
     bool moveLeft();
@@ -35,6 +36,7 @@ public:
     bool moveRight();
     bool move(unsigned char direction);
     std::vector<double> fieldToInput();
+    std::vector<double> fieldToFlatField();
     std::vector<unsigned char> sortOutput(std::vector<double> output);
     void autoSolve();
 

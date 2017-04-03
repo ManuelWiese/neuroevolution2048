@@ -71,7 +71,7 @@ void game::setCell(unsigned char i, unsigned char j, unsigned char value) {
     field[j] += value*pow(16,i);
 }
 
-std::vector<unsigned char> game::getHistogram() {
+std::vector<unsigned char> game::getHistogram(){
     std::vector<unsigned char> output(16,0);
     for( unsigned char i = 0; i < N; i++) {
         for( unsigned char j = 0; j < N; j++) {
@@ -79,6 +79,18 @@ std::vector<unsigned char> game::getHistogram() {
         }
     }
     return output;
+}
+
+unsigned char game::getMaxTile(){
+    unsigned char max = 0;
+    for(unsigned char i = 0; i < N; i++){
+        for(unsigned char j = 0; j < N; j++){
+            unsigned char cell = getCell(i,j);
+            if(max < cell)
+                max = cell;
+        }
+    }
+    return max;
 }
 
 void game::fillPushList() {
@@ -245,6 +257,16 @@ std::vector<double> game::fieldToInput(){
     return input;
 }
 
+std::vector<double> game::fieldToFlatField(){
+    std::vector<double> input;
+    for(unsigned char j = 0; j < N; j++){
+        for(unsigned char k = 0; k < N; k++){
+            input.push_back(getCell(j,k));
+        }
+    }
+    return input;
+}
+
 std::vector<unsigned char> game::sortOutput(std::vector<double> output){
     std::vector<unsigned char> indices(output.size());
     std::iota(begin(indices), end(indices), static_cast<size_t>(0));
@@ -264,6 +286,116 @@ static double getMedian(std::vector<double> &input){
     return (input[input.size()/2]+input[input.size()/2-1])/2.0;
 }
 
+static std::vector<double> getTileProbability(std::vector<double> &maxTile){
+    std::vector<double> result(16, 0);
+    for(auto const &tile : maxTile){
+        for(unsigned short i=0; i<=tile; i++){
+            result[i]+=1.0;
+        }
+    }
+    for(unsigned short i=0; i<result.size(); i++){
+        result[i] /= maxTile.size();
+    }
+    return result;
+}
+
+static void writeGenerationScore(std::vector<double> &generationScore, pool &mainPool){
+    std::ofstream generationFile;
+    generationFile.open(mainPool.timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
+    double generationMean = 0.0;
+
+    for(auto const& x : generationScore){
+        generationMean += x;
+    }
+    generationMean = generationMean / generationScore.size();
+    generationFile << mainPool.generation - 1 << "  " << generationMean << std::endl;
+    generationScore.erase(generationScore.begin(), generationScore.end());
+
+    generationFile.close();
+}
+
+static void writeTileProbability(std::vector<double> &maxTileVector, pool &mainPool){
+    std::ofstream tileProbabilityFile;
+    tileProbabilityFile.open(mainPool.timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
+
+    std::vector<double> tileProbability = getTileProbability(maxTileVector);
+    tileProbabilityFile << mainPool.generation - 1 << " ";
+    for(auto const& prob: tileProbability)
+        tileProbabilityFile << prob << "    ";
+    tileProbabilityFile << std::endl;
+    maxTileVector.erase(maxTileVector.begin(), maxTileVector.end());
+
+    tileProbabilityFile.close();
+}
+
+static void writeMutationRates(pool &mainPool){
+    std::ofstream mutationRatesFile;
+    mutationRatesFile.open(mainPool.timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
+    std::vector<double> ratesMean(9, 0);
+    std::vector<double> ratesSecondMoment(9, 0);
+    for(auto const &spec : mainPool.speciesVector){
+        for(auto const &genom : spec->genomes){
+            ratesMean[0] += genom->mutationRates["weight"];
+            ratesMean[1] += genom->mutationRates["link"];
+            ratesMean[2] += genom->mutationRates["bias"];
+            ratesMean[3] += genom->mutationRates["node"];
+            ratesMean[4] += genom->mutationRates["enable"];
+            ratesMean[5] += genom->mutationRates["disable"];
+            ratesMean[6] += genom->mutationRates["transfer"];
+            ratesMean[7] += genom->mutationRates["delete"];
+            ratesMean[8] += genom->mutationRates["step"];
+
+            ratesSecondMoment[0] += pow(genom->mutationRates["weight"], 2);
+            ratesSecondMoment[1] += pow(genom->mutationRates["link"], 2);
+            ratesSecondMoment[2] += pow(genom->mutationRates["bias"], 2);
+            ratesSecondMoment[3] += pow(genom->mutationRates["node"], 2);
+            ratesSecondMoment[4] += pow(genom->mutationRates["enable"], 2);
+            ratesSecondMoment[5] += pow(genom->mutationRates["disable"], 2);
+            ratesSecondMoment[6] += pow(genom->mutationRates["transfer"], 2);
+            ratesSecondMoment[7] += pow(genom->mutationRates["delete"], 2);
+            ratesSecondMoment[8] += pow(genom->mutationRates["step"], 2);
+        }
+    }
+
+    mutationRatesFile << mainPool.generation << " ";
+    for(unsigned char i=0; i<ratesMean.size(); i++)
+        mutationRatesFile << ratesMean[i] / mainPool.population << "    " << sqrt(ratesSecondMoment[i] / mainPool.population - pow(ratesMean[i] / mainPool.population, 2)) << "    ";
+    mutationRatesFile << std::endl;
+
+    mutationRatesFile.close();
+}
+
+static void writeStats(pool &mainPool){
+    std::ofstream statsFile;
+    statsFile.open(mainPool.timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
+
+    unsigned int neurons = 0, activeNeurons = 0, mutableNeurons = 0;
+    unsigned int genes = 0, enabledGenes = 0, disabledGenes = 0;
+
+    for(auto const& spec : mainPool.speciesVector){
+        for(auto const& genom : spec->genomes){
+            genes += genom->genes.size();
+            for(auto const& gen : genom->genes){
+                if(gen->enabled)
+                    enabledGenes++;
+                else
+                    disabledGenes++;
+            }
+            neurons += genom->neurons.size();
+            for(auto const& neur : genom->neurons){
+                if(neur.second->activated)
+                    activeNeurons++;
+                mutableNeurons += genom->neurons.size() - mainPool.inputs;
+            }
+        }
+    }
+
+    statsFile << mainPool.generation << "   " << neurons*1.0/mainPool.population << "   " << activeNeurons*1.0/mainPool.population << " " << mutableNeurons*1.0/mainPool.population << "    "
+              << genes*1.0/mainPool.population << " " << enabledGenes*1.0/mainPool.population << "  " << disabledGenes*1.0/mainPool.population << " " << mainPool.speciesVector.size() << std::endl;
+
+    statsFile.close();
+}
+
 void game::autoSolve() {
     unsigned short runsPerNetwork = 10;
     unsigned short generations = 150;
@@ -271,11 +403,12 @@ void game::autoSolve() {
     unsigned int oldScore = score;
 
     pool mainPool(N*N*16, 4, POPULATION);
+
     std::ofstream scoreFile;
     scoreFile.open(mainPool.timestamp + ".dat", std::ofstream::out | std::ofstream::app);
-    std::ofstream generationFile;
-    generationFile.open(mainPool.timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
     std::vector<double> generationScore;
+    std::vector<double> maxTileVector;
+
     unsigned short counter = 0;
     while(/*counter < generations * mainPool.population*/true){
         counter++;
@@ -297,23 +430,22 @@ void game::autoSolve() {
                 if(!spawnNumber())
                     break;
             }
-            meanScore += score;
+            meanScore += score//getMaxTile();
             scoreFile << score << std::endl;
             generationScore.push_back(score);
             genomeScores.push_back(score);
+            maxTileVector.push_back(getMaxTile());
         }
-        currentGenome->fitness = getMedian(genomeScores);
+        currentGenome->fitness = meanScore / runsPerNetwork;
         if(currentGenome->fitness > mainPool.maxFitness)
             mainPool.maxFitness = currentGenome->fitness;
         mainPool.nextGenome();
+
         if(mainPool.currentGenome == 0 && mainPool.currentSpecies == 0){
-            double generationMean = 0.0;
-            for(auto const& x : generationScore){
-                generationMean += x;
-            }
-            generationMean = generationMean / (mainPool.population * runsPerNetwork);
-            generationFile << mainPool.generation - 1 << "  " << generationMean << std::endl;
-            generationScore.erase(generationScore.begin(), generationScore.end());
+            writeGenerationScore(generationScore, mainPool);
+            writeTileProbability(maxTileVector, mainPool);
+            writeMutationRates(mainPool);
+            writeStats(mainPool);
         }
     }
 }
