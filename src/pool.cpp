@@ -47,7 +47,7 @@ unsigned int pool::newInnovation(){
 }
 
 static bool compareByFitness(genome* a, genome* b){
-    return a->fitness < b->fitness;
+    return a->adjustedFitness < b->adjustedFitness;
 }
 
 void pool::rankGenomes(){
@@ -71,8 +71,24 @@ double pool::getAverageFitness(){
     return sum/population;
 }
 
+void pool::calculateAdjustedFitness(){
+    for(auto const& spec1 : speciesVector){
+        for(auto const& genom1 : spec1->genomes){
+            unsigned int sum = 0;
+            for(auto const& spec2 : speciesVector){
+                for(auto const& genom2 : spec2->genomes){
+                    if(genome::sameSpecies(genom1, genom2))
+                        sum++;
+                }
+            }
+            genom1->adjustedFitness = genom1->fitness/sum;
+            printf("%f, %f\n", genom1->fitness, genom1->adjustedFitness);
+        }
+    }
+}
+
 static bool compareByFitnessDescending(genome* a, genome* b){
-    return b->fitness < a->fitness;
+    return b->adjustedFitness < a->adjustedFitness;
 }
 
 void pool::cullSpecies(bool cutToOne){
@@ -171,6 +187,7 @@ void pool::addToSpecies(genome* child){
 }
 
 void pool::newGeneration(){
+    calculateAdjustedFitness();
     cullSpecies(false);
     rankGenomes();
     removeStaleSpecies();

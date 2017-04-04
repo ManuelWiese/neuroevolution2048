@@ -21,6 +21,7 @@ class genome{
 public:
     std::vector<gene*>                  genes;
     double                              fitness;
+    double                              adjustedFitness;
     unsigned short                      maxneuron;
     unsigned short                      globalRank;
     std::map<std::string, double>       mutationRates;

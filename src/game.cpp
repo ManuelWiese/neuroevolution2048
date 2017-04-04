@@ -430,7 +430,7 @@ void game::autoSolve() {
                 if(!spawnNumber())
                     break;
             }
-            meanScore += score//getMaxTile();
+            meanScore += score;//getMaxTile();
             scoreFile << score << std::endl;
             generationScore.push_back(score);
             genomeScores.push_back(score);

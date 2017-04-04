@@ -295,7 +295,7 @@ bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
 }
 
 void genome::mutate(){
-    unsigned int disabledGenes = 0;
+    /*unsigned int disabledGenes = 0;
     unsigned int enabledGenes;
     for(auto const& gen: genes){
         if(!gen->enabled){
@@ -311,7 +311,7 @@ void genome::mutate(){
             activeNeurons++;
     }
     printf("Neurons: %d %d, %d\n", neurons.size(), activeNeurons, mutableNeurons);
-    printf("Innovation: %d\n", poolPointer->innovation);
+    printf("Innovation: %d\n", poolPointer->innovation);*/
 
     for(auto const& mutation : mutationRates){
         if(dis(gen)> 0.5)
@@ -321,7 +321,7 @@ void genome::mutate(){
         if(!mutation.first.compare("step"))
             continue;
         double p = mutation.second;
-        printf("%s %f\n", mutation.first.c_str(), mutation.second);
+        //printf("%s %f\n", mutation.first.c_str(), mutation.second);
 
         /*if(!mutation.first.compare("weight"))
             p *= enabledGenes;
