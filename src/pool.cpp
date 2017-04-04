@@ -8,10 +8,9 @@
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     char buffer[128];
     int len;
-    len = std::sprintf(buffer, "%f_%f_%f_%f_%f_%f_%f_%f", LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE, BIAS_MUTATION_CHANCE, 
+    len = std::sprintf(buffer, "%f_%f_%f_%f_%f_%f_%f_%f_%d", LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE, BIAS_MUTATION_CHANCE, 
                                                     WEIGHT_MUTATION_CHANCE, TRANSFER_MUTATION_CHANCE, DISABLE_MUTATION_CHANCE,
-                                                    ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE);
-    printf("%s", buffer);
+                                                    ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE, CULL_MINIMUM);
     //TODO: create timestamp using strstreamer?
     timestamp.assign(buffer, len);
     generation = 0;
@@ -75,12 +74,12 @@ static bool compareByFitnessDescending(genome* a, genome* b){
     return b->fitness < a->fitness;
 }
 
-void pool::cullSpecies(bool cutToOne){
+void pool::cullSpecies(bool cutToMin){
     for(auto const& spec : speciesVector){
         std::sort(spec->genomes.begin(), spec->genomes.end(), compareByFitnessDescending);
         unsigned short remaining;
-        if(cutToOne)
-            remaining = 1;
+        if(cutToMin)
+            remaining = CULL_MINIMUM;
         else
             remaining = ceil(spec->genomes.size() / 2.0);
 
@@ -93,7 +92,8 @@ void pool::cullSpecies(bool cutToOne){
             }
             delete spec->genomes[i];
         }
-        spec->genomes.erase(spec->genomes.begin()+remaining, spec->genomes.end());
+        if(remaining < spec->genomes.size())
+            spec->genomes.erase(spec->genomes.begin()+remaining, spec->genomes.end());
     }
 }
 
@@ -184,15 +184,22 @@ void pool::newGeneration(){
 
     std::vector<genome*> children;
     for(auto const& spec : speciesVector){
-        short breed = floor(spec->averageFitness/avgFitness) - 1;
+        short breed = floor(spec->averageFitness/avgFitness) - std::min((int)spec->genomes.size(), CULL_MINIMUM);
+        printf("breed: %d\n", breed);
         for( unsigned short i = 0; i < breed; i++){
             children.push_back(spec->breedChild());
         }
     }
 
     cullSpecies(true);
-
-    while(children.size() + speciesVector.size() < population)
+    unsigned short remaining = 0;
+    for(auto const& spec : speciesVector){
+        remaining += spec->genomes.size();
+    }
+    printf("children.size() = %d\n", children.size());
+    printf("remaining after cull: %d\n", remaining);
+    printf("speciesVector.size() = %d\n", speciesVector.size());
+    while(children.size() + remaining < population)
         children.push_back(speciesVector[(int)(dis(gen)*speciesVector.size())]->breedChild());
 
     for(auto const& child : children)

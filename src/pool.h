@@ -23,7 +23,7 @@ public:
     unsigned int        newInnovation();
     void                rankGenomes();
     double              getAverageFitness();
-    void                cullSpecies(bool cutToOne);
+    void                cullSpecies(bool cutToMin);
     void                removeStaleSpecies();
     void                removeWeakSpecies();
     void                addToSpecies(genome* child);

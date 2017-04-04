@@ -4,8 +4,9 @@
 #define DELTA_BIAS 0.4
 #define DELTA_THRESHOLD  1.0
 #define WEIGHT_RANGE  2.0
-#define BIAS_RANGE  1.0
+#define BIAS_RANGE  2.0
 
+#define CULL_MINIMUM 4
 #define STALE_SPECIES  15
 
 #define PERTUBCHANCE  0.90
