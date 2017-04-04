@@ -1,6 +1,7 @@
 #define POPULATION  150
 #define DELTA_DISJOINT  2.0
 #define DELTA_WEIGHTS  0.4
+#define DELTA_BIAS 0.4
 #define DELTA_THRESHOLD  1.0
 #define WEIGHT_RANGE  2.0
 #define BIAS_RANGE  1.0

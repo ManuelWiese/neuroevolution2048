@@ -163,11 +163,35 @@ double genome::weights(genome* genome1, genome* genome2){
     return 0.0;
 }
 
+double genome::bias(genome *genome1, genome *genome2){
+    std::vector<unsigned int> innovations;
+        std::vector<unsigned int> neuronList;
+    for( auto const& x : genome2->genes)
+        innovations.push_back(x->innovation);
+
+    double sum = 0.0;
+
+    for( auto const& x : genome1->genes){
+        auto search =  find(innovations.begin(), innovations.end(), x->innovation);
+        if( search != innovations.end()){
+            auto search2 = find(neuronList.begin(), neuronList.end(), x->out);
+            if( search2 == neuronList.end()){
+                sum += std::abs(genome2->neurons[x->out]->bias - genome1->neurons[x->out]->bias);
+                neuronList.push_back(x->out);
+            }
+        }
+    }
+    if( neuronList.size() > 0)
+        return sum / neuronList.size();
+    return 0.0;
+}
+
 bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dd = DELTA_DISJOINT * disjoint(genome1, genome2);
     double dw = DELTA_WEIGHTS * weights(genome1, genome2);
+    double db = DELTA_BIAS * bias(genome1, genome2);
 
-    return( dd + dw < DELTA_THRESHOLD);
+    return( dd + dw + db < DELTA_THRESHOLD);
 }
 
 double genome::calculateNeuron(unsigned short neuronNumber){

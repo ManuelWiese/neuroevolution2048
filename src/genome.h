@@ -34,6 +34,7 @@ public:
     static genome*      crossover(genome *genome1, genome *genome2);
     static double       disjoint(genome *genome1, genome *genome2);
     static double       weights(genome *genome1, genome *genome2);
+    static double       bias(genome *genome1, genome *genome2);
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);

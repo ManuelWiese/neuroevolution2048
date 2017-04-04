@@ -382,10 +382,10 @@ static void writeStats(pool &mainPool){
                     disabledGenes++;
             }
             neurons += genom->neurons.size();
+            mutableNeurons += genom->neurons.size() - mainPool.inputs;
             for(auto const& neur : genom->neurons){
                 if(neur.second->activated)
                     activeNeurons++;
-                mutableNeurons += genom->neurons.size() - mainPool.inputs;
             }
         }
     }
@@ -430,7 +430,7 @@ void game::autoSolve() {
                 if(!spawnNumber())
                     break;
             }
-            meanScore += score//getMaxTile();
+            meanScore += score;//getMaxTile();
             scoreFile << score << std::endl;
             generationScore.push_back(score);
             genomeScores.push_back(score);
