@@ -212,20 +212,21 @@ double genome::calculateNeuron(unsigned short neuronNumber){
     return tmp->value;
 }
 
-std::vector<double> genome::evaluate(std::vector<double> inputs){
+std::vector<double> genome::evaluate(std::vector<double> &inputs){
     for(auto const& tmp : neurons)
-        neurons[tmp.first]->calculated = false;
+        tmp.second->calculated = false;
 
     for(unsigned short i = 0; i < poolPointer->inputs; i++){
-        neurons[i]->value = inputs[i];
-        neurons[i]->calculated = true;
-        neurons[i]->activated |= inputs[i] != 0.0;
+        neuron *neuronPointer = neurons[i];
+        neuronPointer->value = inputs[i];
+        neuronPointer->calculated = true;
+        if( inputs[i] )
+            neuronPointer->activated = true;
     }
 
     std::vector<double> output;
 
     for(unsigned short i = 0; i < poolPointer->outputs; i++){
-        neurons[MAX_NODES - poolPointer->outputs + i]->calculated = false;
         output.push_back(calculateNeuron(MAX_NODES - poolPointer->outputs + i));
     }
 

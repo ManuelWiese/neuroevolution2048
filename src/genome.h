@@ -38,7 +38,7 @@ public:
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
-    std::vector<double> evaluate(std::vector<double> inputs);
+    std::vector<double> evaluate(std::vector<double> &inputs);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);

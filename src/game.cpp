@@ -409,9 +409,7 @@ void game::autoSolve() {
     std::vector<double> generationScore;
     std::vector<double> maxTileVector;
 
-    unsigned short counter = 0;
-    while(/*counter < generations * mainPool.population*/true){
-        counter++;
+    while(true){
         double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
         std::vector<double> genomeScores;
