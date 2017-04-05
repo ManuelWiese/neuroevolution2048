@@ -245,19 +245,11 @@ bool game::move(unsigned char direction) {
     return false;
 }
 
-std::vector<double> game::fieldToInput(){
-    std::vector<double> input;
-    for( unsigned char i = 0; i < 16; i++){
-        for(unsigned char j = 0; j < N; j++){
-            for(unsigned char k = 0; k < N; k++){
-                if(getCell(j,k) == i)
-                    input.push_back(1.0);
-                else
-                    input.push_back(0.0);
-            }
-        }
+void game::fieldToInput(std::vector<double> &input){
+    std::fill(input.begin(), input.end(), 0.0);
+    for(unsigned char i = 0; i < N*N; i++){
+        input[getCell(i)*16 + i] = 1.0;
     }
-    return input;
 }
 
 std::vector<double> game::fieldToFlatField(){
@@ -406,7 +398,7 @@ void game::autoSolve() {
     unsigned int oldScore = score;
 
     pool mainPool(N*N*16, 4, POPULATION);
-
+    std::vector<double> input(N*N*16, 0.0);
     std::ofstream scoreFile;
     scoreFile.open(mainPool.timestamp + ".dat", std::ofstream::out | std::ofstream::app);
     std::vector<double> generationScore;
@@ -420,7 +412,7 @@ void game::autoSolve() {
             field = oldField;
             score = oldScore;
             while(true){
-                std::vector<double> input = fieldToInput();
+                fieldToInput(input);
                 std::vector<double> output = currentGenome->evaluate(input);
                 std::vector<unsigned char> sorted = sortOutput(output);
                 for(auto const& x : sorted){

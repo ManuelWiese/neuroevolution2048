@@ -36,7 +36,7 @@ public:
     bool moveDown();
     bool moveRight();
     bool move(unsigned char direction);
-    std::vector<double> fieldToInput();
+    void fieldToInput(std::vector<double> &input);
     std::vector<double> fieldToFlatField();
     std::vector<unsigned char> sortOutput(std::vector<double> output);
     void autoSolve();
