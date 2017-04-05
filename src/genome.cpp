@@ -210,8 +210,8 @@ double genome::calculateNeuron(unsigned short neuronNumber){
 }
 
 std::vector<double> genome::evaluate(std::vector<double> &inputs){
-    for(auto const& tmp : neurons)
-        tmp->calculated = false;
+    for(std::vector<neuron*>::iterator it = neurons.begin()+poolPointer->inputs; it != neurons.end(); ++it)
+        (*it)->calculated = false;
 
     for(unsigned short i = 0; i < poolPointer->inputs; i++){
         neuron *neuronPointer = neurons[i];
