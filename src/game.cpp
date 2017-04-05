@@ -241,7 +241,8 @@ bool game::move(unsigned char direction) {
 }
 
 void game::fieldToInput(std::vector<double> &input){
-    std::fill(input.begin(), input.end(), 0.0);
+    //HACK: input will be reset to 0.0 in genome::evaluate
+    //std::fill(input.begin(), input.end(), 0.0);
     for(unsigned char i = 0; i < N*N; i++){
         input[getCell(i)*16 + i] = 1.0;
     }

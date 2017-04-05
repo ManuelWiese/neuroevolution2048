@@ -217,8 +217,10 @@ std::vector<double> genome::evaluate(std::vector<double> &inputs){
         neuron *neuronPointer = neurons[i];
         neuronPointer->value = inputs[i];
         neuronPointer->calculated = true;
-        if( inputs[i] )
+        if( neuronPointer->value ){
+            inputs[i] = 0.0;
             neuronPointer->activated = true;
+        }
     }
 
     std::vector<double> output;
