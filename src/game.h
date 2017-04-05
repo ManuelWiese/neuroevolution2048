@@ -22,6 +22,7 @@ public:
     std::vector<unsigned int> scoreList;
     std::vector<unsigned int> emptyList;
     std::vector<int> monotonousList;
+    std::array<unsigned int, N+1> powersOf16;
 
     game();
     void print(bool printField);

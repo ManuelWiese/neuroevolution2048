@@ -6,6 +6,9 @@ game::game() {
     for( unsigned char i = 0; i < field.size(); i++ ) {
         field[i] = 0;
     }
+    for(unsigned char i = 0; i <= N; i++){
+        powersOf16[i] = pow(16, i);
+    }
     emptyCells = N*N-2;
     score = 0;
     spawnNumber();
@@ -64,11 +67,11 @@ void game::setCell(unsigned char i, unsigned char j, unsigned char value) {
     unsigned int mask = 0;
     for( unsigned char count = 0; count < field.size(); count++ ) {
         if( count != i ) {
-            mask += 15*pow(16, count);
+            mask += 15*powersOf16[count];
         }
     }
     field[j] &= mask;
-    field[j] += value*pow(16,i);
+    field[j] += value*powersOf16[i];
 }
 
 std::vector<unsigned char> game::getHistogram(){
@@ -94,7 +97,7 @@ unsigned char game::getMaxTile(){
 }
 
 void game::fillPushList() {
-    for( unsigned int row = 0; row < pow(16,N); row++ ) {
+    for( unsigned int row = 0; row < powersOf16[N]; row++ ) {
         bool merged = false;
         unsigned int pushScore = 0;
         std::array<unsigned char, N> rowArray;
@@ -152,7 +155,7 @@ void game::fillPushList() {
 
         unsigned int tmpRow = 0;
         for( unsigned char i = 0; i < N; i++ ) {
-            tmpRow += rowArray[i]*pow(16,i);
+            tmpRow += rowArray[i]*powersOf16[i];
         }
         pushList.push_back(tmpRow);
         scoreList.push_back(pushScore);
@@ -164,7 +167,7 @@ std::array<unsigned int, N> game::columns(std::array<unsigned int, N> field) {
     for( unsigned char i = 0; i < N; i++ ) {
         output[i] = 0;
         for( unsigned char j = 0; j < N; j++ ) {
-            output[i] += ((field[j] >> 4*i) & 15 ) * pow(16,j);
+            output[i] += ((field[j] >> 4*i) & 15 ) * powersOf16[j];
         }
     }
     return output;
@@ -173,7 +176,7 @@ std::array<unsigned int, N> game::columns(std::array<unsigned int, N> field) {
 unsigned int game::reverseNumber(unsigned int number) {
     unsigned int output = 0;
     for( unsigned char i = 0; i < N; i++ ) {
-        output += (( number >> 4*i ) & 15 )*pow(16, N-i-1);
+        output += (( number >> 4*i ) & 15 )*powersOf16[N-i-1];
     }
     return output;
 }
@@ -397,7 +400,7 @@ static void writeStats(pool &mainPool){
 }
 
 void game::autoSolve() {
-    unsigned short runsPerNetwork = 100;
+    unsigned short runsPerNetwork = 10;
     unsigned short generations = 150;
     std::array<unsigned int, N> oldField = field;
     unsigned int oldScore = score;
