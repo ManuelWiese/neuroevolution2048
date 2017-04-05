@@ -18,23 +18,18 @@ game::game() {
 }
 
 bool game::spawnNumber() {
-    emptyCells = 0;
-    for( unsigned int i = 0; i < N; i++)
-        for( unsigned int j = 0; j < N; j++)
-            if(getCell(i, j) == 0)
-                emptyCells += 1;
-    if( emptyCells == 0)
+    std::vector<unsigned char> emptyList;
+    for(unsigned char index = 0; index < N*N; ++index){
+        if(!getCell(index))
+            emptyList.push_back(index);
+    }
+    if(!emptyList.size())
         return false;
 
-    unsigned int spawn = dis(gen) > 0.9 ? 2 : 1;
-    while(true) {
-        unsigned char i = floor(dis(gen) * N);
-        unsigned char j = floor(dis(gen) * N);
-        if( getCell(i, j) == 0 ) {
-            setCell(i, j, spawn);
-            return true;
-        }
-    }
+    unsigned char spawn = dis(gen) > 0.9 ? 2 : 1;
+    unsigned char pick = (unsigned char)(dis(gen) * emptyList.size());
+    setCell(emptyList[pick], spawn);
+    return true;
 }
 
 void game::print(bool printField = true) {
@@ -55,11 +50,7 @@ unsigned char game::getCell(unsigned char i, unsigned char j) {
 }
 
 unsigned char game::getCell(unsigned char index) {
-    unsigned int j = index / N;
-    if( j % 2 == 0)
-        return getCell( index % N, j);
-    else
-        return getCell(N - 1 - index % N, j);
+    return getCell(index%N, index/N);
 }
 
 //TODO: faster with just - and + operation using getCell?
@@ -72,6 +63,10 @@ void game::setCell(unsigned char i, unsigned char j, unsigned char value) {
     }
     field[j] &= mask;
     field[j] += value*powersOf16[i];
+}
+
+void game::setCell(unsigned char index, unsigned char value){
+    setCell(index%N, index/N, value);
 }
 
 std::vector<unsigned char> game::getHistogram(){

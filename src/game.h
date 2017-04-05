@@ -29,6 +29,7 @@ public:
     unsigned char getCell(unsigned char i, unsigned char j);
     unsigned char getCell(unsigned char index);
     void setCell(unsigned char i, unsigned char j, unsigned char value);
+    void setCell(unsigned char index, unsigned char value);
     unsigned char getMaxTile();
     std::vector<unsigned char> getHistogram();
     bool moveUp();
