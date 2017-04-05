@@ -2,9 +2,9 @@
 #include "pool.h"
 #include <limits>
 
-genome::genome(pool *poolPtr){
+genome::genome(pool *poolPtr, bool createNeurons = true){
     fitness = std::numeric_limits<double>::min();
-    maxneuron = 0;
+    maxneuron = poolPtr->inputs + poolPtr->outputs - 1;
     globalRank = 0;
 
     mutationRates["weight"] = WEIGHT_MUTATION_CHANCE;
@@ -18,14 +18,16 @@ genome::genome(pool *poolPtr){
     mutationRates["step"] = STEPSIZE;
 
     poolPointer = poolPtr;
+    if(createNeurons){
+        for( unsigned int i = 0; i < poolPointer->inputs; i++){
+            neurons.push_back(new neuron());
+        }
 
-    for( unsigned int i = 0; i < poolPointer->inputs; i++){
-        neurons[i] = new neuron();
-    }
-
-    for( unsigned int i = 0; i < poolPointer->outputs; i++){
-        neurons[i + MAX_NODES - poolPointer->outputs] = new neuron();
-        neurons[i + MAX_NODES - poolPointer->outputs]->activated = true;
+        for( unsigned int i = 0; i < poolPointer->outputs; i++){
+            neuron* neuronPointer = new neuron();
+            neuronPointer->activated = true;
+            neurons.push_back(neuronPointer);
+        }
     }
 }
 
@@ -47,10 +49,11 @@ genome::genome(genome &copyGenome) {
     poolPointer = copyGenome.poolPointer;
 
     for( auto const& x : copyGenome.neurons){
-        neurons[x.first] = new neuron();
-        neurons[x.first]->transfer = x.second->transfer;
-        neurons[x.first]->bias = x.second->bias;
-        neurons[x.first]->activated = x.second->activated;
+        neuron* neuronPointer = new neuron();
+        neuronPointer->transfer = x->transfer;
+        neuronPointer->bias = x->bias;
+        neuronPointer->activated = x->activated;
+        neurons.push_back(neuronPointer);
     }
 
     for( auto const& gene : genes ){
@@ -65,9 +68,7 @@ genome::genome(genome &copyGenome) {
 
 genome* genome::basicGenome(pool *poolPtr){
     genome* outputGenome = new genome(poolPtr);
-    outputGenome->maxneuron = poolPtr->inputs -1;
     outputGenome->mutate();
-
     return outputGenome;
 }
 
@@ -77,18 +78,14 @@ genome* genome::crossover(genome* genome1, genome* genome2){
         genome1 = genome2;
         genome2 = tmpGenome;
     }
-    genome *child = new genome(genome1->poolPointer);
-
-    //delete input and output neurons, since they will be created in next loop
-    for(auto const& neur : child->neurons){
-        delete neur.second;
-    }
+    genome *child = new genome(genome1->poolPointer, false);
 
     for( auto const& x : genome1->neurons){
-        child->neurons[x.first] = new neuron();
-        child->neurons[x.first]->transfer = x.second->transfer;
-        child->neurons[x.first]->bias = x.second->bias;
-        child->neurons[x.first]->activated = x.second->activated;
+        neuron* neuronPointer = new neuron();
+        neuronPointer->transfer = x->transfer;
+        neuronPointer->bias = x->bias;
+        neuronPointer->activated = x->activated;
+        child->neurons.push_back(neuronPointer);
     }
 
     gene* copyGene;
@@ -214,7 +211,7 @@ double genome::calculateNeuron(unsigned short neuronNumber){
 
 std::vector<double> genome::evaluate(std::vector<double> &inputs){
     for(auto const& tmp : neurons)
-        tmp.second->calculated = false;
+        tmp->calculated = false;
 
     for(unsigned short i = 0; i < poolPointer->inputs; i++){
         neuron *neuronPointer = neurons[i];
@@ -227,7 +224,7 @@ std::vector<double> genome::evaluate(std::vector<double> &inputs){
     std::vector<double> output;
 
     for(unsigned short i = 0; i < poolPointer->outputs; i++){
-        output.push_back(calculateNeuron(MAX_NODES - poolPointer->outputs + i));
+        output.push_back(calculateNeuron(poolPointer->inputs + i));
     }
 
     return output;
@@ -244,10 +241,10 @@ bool genome::containsGene(gene* inputGene){
 
 unsigned short genome::randomNeuron(bool includeInput){
     std::vector<unsigned short> possible;
-    for(auto const& x : neurons){
-        if(includeInput || !isInputNeuron(x.first))
-            if(x.second->activated)
-                possible.push_back(x.first);
+    for(unsigned short i = 0; i < neurons.size(); i++){
+        if(includeInput || !isInputNeuron(i))
+            if(neurons[i]->activated)
+                possible.push_back(i);
     }
     if(possible.size() > 0){
         unsigned short pick = (int)(dis(gen) * possible.size());
@@ -262,7 +259,7 @@ bool genome::isInputNeuron(unsigned short neuronNumber){
 }
 
 bool genome::isOutputNeuron(unsigned short neuronNumber){
-    return(neuronNumber >= MAX_NODES - poolPointer->outputs && neuronNumber < MAX_NODES);
+    return(neuronNumber >= poolPointer->inputs && neuronNumber < poolPointer->inputs + poolPointer->outputs);
 }
 
 
@@ -313,7 +310,7 @@ bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
         return false;
 
     for(auto const& tmp : neurons)
-        neurons[tmp.first]->checkedConnection = false;
+        tmp->checkedConnection = false;
     if(areConnected(neuron2, neuron1))
         return false;
     return true;
@@ -459,9 +456,10 @@ void genome::nodeMutate(){
     gene1->weight = 1.0;
     gene1->innovation = poolPointer->newInnovation();
     genes.push_back(gene1);
-    neurons[gene1->out] = new neuron();
-    neurons[gene1->out]->transfer = &neuron::id;
-    neurons[gene1->out]->addIncoming(gene1);
+    neuron* neuronPointer = new neuron();
+    neuronPointer->transfer = &neuron::id;
+    neuronPointer->addIncoming(gene1);
+    neurons.push_back(neuronPointer);
 
     gene* gene2 = new gene();
     gene2->out = oldGene->out;

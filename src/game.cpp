@@ -384,7 +384,7 @@ static void writeStats(pool &mainPool){
             neurons += genom->neurons.size();
             mutableNeurons += genom->neurons.size() - mainPool.inputs;
             for(auto const& neur : genom->neurons){
-                if(neur.second->activated)
+                if(neur->activated)
                     activeNeurons++;
             }
         }
@@ -397,7 +397,7 @@ static void writeStats(pool &mainPool){
 }
 
 void game::autoSolve() {
-    unsigned short runsPerNetwork = 10;
+    unsigned short runsPerNetwork = 100;
     unsigned short generations = 150;
     std::array<unsigned int, N> oldField = field;
     unsigned int oldScore = score;

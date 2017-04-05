@@ -23,6 +23,4 @@
 
 #define STEPSIZE  0.1
 
-#define MAX_NODES  10000
-
 #define SAVEPATH  "./save/"

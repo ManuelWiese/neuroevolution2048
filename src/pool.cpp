@@ -33,7 +33,7 @@ pool::~pool(){
             for(auto const& gen: genom->genes)
                 delete gen;
             for(auto const& neur : genom->neurons)
-                delete neur.second;
+                delete neur;
             delete genom;
         }
         delete spec;
@@ -88,7 +88,7 @@ void pool::cullSpecies(bool cutToMin){
                 delete gen;
             }
             for(auto const& neur : spec->genomes[i]->neurons){
-                delete neur.second;
+                delete neur;
             }
             delete spec->genomes[i];
         }
@@ -119,7 +119,7 @@ void pool::removeStaleSpecies(){
                     delete gen;
                 }
                 for(auto const& neur : genom->neurons){
-                    delete neur.second;
+                    delete neur;
                 }
                 delete genom;
             }
@@ -148,7 +148,7 @@ void pool::removeWeakSpecies(){
                     delete gen;
                 }
                 for(auto const& neur : genom->neurons){
-                    delete neur.second;
+                    delete neur;
                 }
                 delete genom;
             }

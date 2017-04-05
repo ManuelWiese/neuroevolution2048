@@ -25,9 +25,9 @@ public:
     unsigned short                      globalRank;
     std::map<std::string, double>       mutationRates;
     pool                                *poolPointer;
-    std::map<unsigned short, neuron*>   neurons;
+    std::vector<neuron*>                neurons;
 
-                        genome(pool *poolPtr);
+                        genome(pool *poolPtr, bool createNeurons);
                         genome(genome &copyGenome);
     static genome*      basicGenome(pool *poolPointer);
 
