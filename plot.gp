@@ -7,6 +7,10 @@ tileProbabilityFile = name."_tileprobability.dat"
 mutationRatesFile = name."_mutationrates.dat"
 statsFile = name."_stats.dat"
 
+set ytics mirror
+unset y2tics
+unset y2label
+
 set term GPVAL_TERM 0
 
 set xlabel "generation"
@@ -40,10 +44,12 @@ set yrange [*:*]
 set ylabel "success rate"
 set key top left
 
-p tileProbabilityFile u 1:10 title "256" w l ls 11,\
-tileProbabilityFile u 1:11 title "512" w l ls 12,\
-tileProbabilityFile u 1:12 title "1024" w l ls 13,\
-tileProbabilityFile u 1:13 title "2048" w l ls 14
+p tileProbabilityFile u 1:8 title "64" w l ls 11,\
+tileProbabilityFile u 1:9 title "128" w l ls 12,\
+tileProbabilityFile u 1:10 title "256" w l ls 13,\
+tileProbabilityFile u 1:11 title "512" w l ls 14,\
+tileProbabilityFile u 1:12 title "1024" w l ls 21,\
+tileProbabilityFile u 1:13 title "2048" w l ls 22
 
 
 set term GPVAL_TERM 2
@@ -64,15 +70,16 @@ mutationRatesFile u 1:18:19 title "step size mutate" w errorbars ls 31
 
 set term GPVAL_TERM 3
 
-binwidth=32
-bin(x,width)=width*floor(x/width)
-plot scoreFile using (bin($1,binwidth)):($0 < 10*1500 && $0 >= 9*1500 ? 1.0 : 0.0) smooth freq with boxes,\
-scoreFile using (bin($1,binwidth)):(($0 < 50*1500 && $0 >= 49*1500)? 1.0 : 0.0) smooth freq with boxes,\
-scoreFile using (bin($1,binwidth)):(($0 < 100*1500 && $0 >= 99*1500)? 1.0 : 0.0) smooth freq with boxes
+#binwidth=32
+#bin(x,width)=width*floor(x/width)
+#plot scoreFile using (bin($1,binwidth)):($0 < 10*1500 && $0 >= 9*1500 ? 1.0 : 0.0) smooth freq with boxes,\
+#scoreFile using (bin($1,binwidth)):(($0 < 50*1500 && $0 >= 49*1500)? 1.0 : 0.0) smooth freq with boxes,\
+#scoreFile using (bin($1,binwidth)):(($0 < 100*1500 && $0 >= 99*1500)? 1.0 : 0.0) smooth freq with boxes
 
 
 set term GPVAL_TERM 4
 
+set ytics nomirror
 set y2tics
 set y2label "genes"
 set ylabel "neurons"
