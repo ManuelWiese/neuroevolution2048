@@ -196,9 +196,9 @@ void pool::newGeneration(){
     for(auto const& spec : speciesVector){
         remaining += spec->genomes.size();
     }
-    printf("children.size() = %d\n", children.size());
+    printf("children.size() = %ld\n", children.size());
     printf("remaining after cull: %d\n", remaining);
-    printf("speciesVector.size() = %d\n", speciesVector.size());
+    printf("speciesVector.size() = %ld\n", speciesVector.size());
     while(children.size() + remaining < population)
         children.push_back(speciesVector[(int)(dis(gen)*speciesVector.size())]->breedChild());
 
