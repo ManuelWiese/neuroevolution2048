@@ -6,9 +6,9 @@
 #include <iostream>
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
-    char buffer[1024];
+    char buffer[256];
     int len;
-    len = std::sprintf(buffer, "%sPOP%d_RUNS%d_DD%f_DW%fDB%f_DT%f_THR%f_WR%f_BR%f_CULLMIN%d_STALE%d_PC%f_CC%f_LI%f_NO%f_BI%f_WE%f_TR%f_DI%f_EN%f_DE%f_STEP%f",
+    len = std::sprintf(buffer, "%sPOP%d_RUNS%d_DD%.3f_DW%.3fDB%.3f_DT%.3f_DR%.3f_THR%.3f_WR%.3f_BR%.3f_CULLMIN%d_STALE%d_PC%.3f_CC%.3f_LI%.3f_NO%.3f_BI%.3f_WE%.3f_TR%.3f_DI%.3f_EN%.3f_DE%.3f_STEP%.3f",
                                 NAME_PREFIX,
                                 POPULATION,
                                 RUNS_PER_NETWORK,
@@ -16,6 +16,7 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
                                 DELTA_WEIGHTS,
                                 DELTA_BIAS,
                                 DELTA_TRANSFER,
+                                DELTA_RATES,
                                 DELTA_THRESHOLD,
                                 WEIGHT_RANGE,
                                 BIAS_RANGE,

@@ -5,6 +5,7 @@
 #define DELTA_WEIGHTS  0.4
 #define DELTA_BIAS 0.4
 #define DELTA_TRANSFER 2.0
+#define DELTA_RATES	0.4
 #define DELTA_THRESHOLD  1.1
 
 #define WEIGHT_RANGE  2.0

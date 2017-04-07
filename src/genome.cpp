@@ -44,7 +44,8 @@ genome::genome(genome &copyGenome) {
     for (auto const& x : copyGenome.mutationRates){
         mutationRates[x.first] = x.second;
     }
-    mutationRates["step"] = STEPSIZE;
+    //Why should be reset the stepsize?
+    //mutationRates["step"] = STEPSIZE;
 
     poolPointer = copyGenome.poolPointer;
 
@@ -185,7 +186,7 @@ double genome::bias(genome *genome1, genome *genome2){
 
 double genome::transfer(genome *genome1, genome *genome2){
     std::vector<unsigned int> innovations;
-        std::vector<unsigned int> neuronList;
+    std::vector<unsigned int> neuronList;
     for( auto const& x : genome2->genes)
         innovations.push_back(x->innovation);
 
@@ -208,11 +209,20 @@ double genome::transfer(genome *genome1, genome *genome2){
     return 0.0;
 }
 
+double genome::rates(genome *genome1, genome *genome2){
+    double diff = 0.0;
+    for(auto const& mutation : genome1->mutationRates){
+        diff += std::abs(genome1->mutationRates[mutation.first] - genome2->mutationRates[mutation.first]);
+    }
+    return diff/genome1->mutationRates.size();
+}
+
 bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dd = DELTA_DISJOINT * disjoint(genome1, genome2);
     double dw = DELTA_WEIGHTS * weights(genome1, genome2);
     double db = DELTA_BIAS * bias(genome1, genome2);
     double dt = DELTA_TRANSFER * transfer(genome1, genome2);
+    double dr = DELTA_RATES * rates(genome1, genome2);
 
     return( dd + dw + db + dt < DELTA_THRESHOLD);
 }
