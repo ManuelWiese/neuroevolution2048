@@ -388,7 +388,6 @@ static void writeStats(pool &mainPool){
 }
 
 void game::autoSolve() {
-    unsigned short runsPerNetwork = 10;
     unsigned short generations = 150;
     std::array<unsigned int, N> oldField = field;
     unsigned int oldScore = score;
@@ -404,7 +403,7 @@ void game::autoSolve() {
         double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
         std::vector<double> genomeScores;
-        for(unsigned short run = 0; run < runsPerNetwork; run++){
+        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
             field = oldField;
             score = oldScore;
             while(true){
@@ -425,7 +424,7 @@ void game::autoSolve() {
             genomeScores.push_back(score);
             maxTileVector.push_back(getMaxTile());
         }
-        currentGenome->fitness = meanScore / runsPerNetwork;
+        currentGenome->fitness = meanScore / RUNS_PER_NETWORK;
         if(currentGenome->fitness > mainPool.maxFitness)
             mainPool.maxFitness = currentGenome->fitness;
         mainPool.nextGenome();

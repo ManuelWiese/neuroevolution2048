@@ -137,7 +137,7 @@ double genome::disjoint(genome* genome1, genome* genome2){
         else
             disjointGenes += 1;
     }
-    return disjointGenes / std::max(genome1->genes.size(), genome2->genes.size());
+    return disjointGenes * 1.0/ std::max(genome1->genes.size(), genome2->genes.size());
 }
 
 double genome::weights(genome* genome1, genome* genome2){
@@ -183,12 +183,39 @@ double genome::bias(genome *genome1, genome *genome2){
     return 0.0;
 }
 
+double genome::transfer(genome *genome1, genome *genome2){
+    std::vector<unsigned int> innovations;
+        std::vector<unsigned int> neuronList;
+    for( auto const& x : genome2->genes)
+        innovations.push_back(x->innovation);
+
+    unsigned int disjoint = 0;
+    unsigned int sum = 0;
+
+    for( auto const& x : genome1->genes){
+        auto search =  find(innovations.begin(), innovations.end(), x->innovation);
+        if( search != innovations.end()){
+            auto search2 = find(neuronList.begin(), neuronList.end(), x->out);
+            if( search2 == neuronList.end()){
+                if(genome2->neurons[x->out]->transfer != genome1->neurons[x->out]->transfer)
+                    disjoint++;
+                sum++;
+            }
+        }
+    }
+    if(sum)
+        return disjoint*1.0/sum;
+    return 0.0;
+}
+
 bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dd = DELTA_DISJOINT * disjoint(genome1, genome2);
     double dw = DELTA_WEIGHTS * weights(genome1, genome2);
     double db = DELTA_BIAS * bias(genome1, genome2);
+    double dt = DELTA_TRANSFER * transfer(genome1, genome2);
+    printf("%f,%f,%f,%f\n", dd, dw, db, dt);
 
-    return( dd + dw + db < DELTA_THRESHOLD);
+    return( dd + dw + db + dt < DELTA_THRESHOLD);
 }
 
 double genome::calculateNeuron(unsigned short neuronNumber){

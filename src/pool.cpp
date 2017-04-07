@@ -6,11 +6,32 @@
 #include <iostream>
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
-    char buffer[128];
+    char buffer[1024];
     int len;
-    len = std::sprintf(buffer, "%f_%f_%f_%f_%f_%f_%f_%f_%d", LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE, BIAS_MUTATION_CHANCE, 
-                                                    WEIGHT_MUTATION_CHANCE, TRANSFER_MUTATION_CHANCE, DISABLE_MUTATION_CHANCE,
-                                                    ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE, CULL_MINIMUM);
+    len = std::sprintf(buffer, "POP%d_RUNS%d_DD%f_DW%fDB%f_DT%f_THR%f_WR%f_BR%f_CULLMIN%d_STALE%d_PC%f_CC%f_LI%f_NO%f_BI%f_WE%f_TR%f_DI%f_EN%f_DE%f_STEP%f", 
+                                POPULATION,
+                                RUNS_PER_NETWORK,
+                                DELTA_DISJOINT,
+                                DELTA_WEIGHTS,
+                                DELTA_BIAS,
+                                DELTA_TRANSFER,
+                                DELTA_THRESHOLD,
+                                WEIGHT_RANGE,
+                                BIAS_RANGE,
+                                CULL_MINIMUM,
+                                STALE_SPECIES,
+                                PERTUBCHANCE,
+                                CROSSOVER_CHANCE,
+                                LINK_MUTATION_CHANCE,
+                                NODE_MUTATION_CHANCE,
+                                BIAS_MUTATION_CHANCE,
+                                WEIGHT_MUTATION_CHANCE,
+                                TRANSFER_MUTATION_CHANCE,
+                                DISABLE_MUTATION_CHANCE,
+                                ENABLE_MUTATION_CHANCE,
+                                DELETE_MUTATION_CHANCE,
+                                STEPSIZE
+                                );
     //TODO: create timestamp using strstreamer?
     timestamp.assign(buffer, len);
     generation = 0;
