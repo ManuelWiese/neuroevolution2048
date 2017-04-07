@@ -27,4 +27,6 @@
 
 #define STEPSIZE  0.1
 
+#define NAME_PREFIX	""
 #define SAVEPATH  "./save/"
+

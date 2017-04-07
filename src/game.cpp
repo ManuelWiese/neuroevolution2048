@@ -387,6 +387,17 @@ static void writeStats(pool &mainPool){
     statsFile.close();
 }
 
+static double getMaxScore(std::vector<double> &flatField){
+       double score = 0.0;
+       for(auto const& cell : flatField){
+               if(cell < 2)
+                       continue;
+               score += (cell-1)*pow(2, cell);
+       }
+       return score;
+}
+
+
 void game::autoSolve() {
     unsigned short generations = 150;
     std::array<unsigned int, N> oldField = field;
@@ -418,7 +429,8 @@ void game::autoSolve() {
                 if(!spawnNumber())
                     break;
             }
-            meanScore += score;//getMaxTile();
+            std::vector<double> flatField = fieldToFlatField();
+            meanScore += getMaxScore(flatField);//getMaxTile();
             scoreFile << score << std::endl;
             generationScore.push_back(score);
             genomeScores.push_back(score);

@@ -8,7 +8,8 @@
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     char buffer[1024];
     int len;
-    len = std::sprintf(buffer, "POP%d_RUNS%d_DD%f_DW%fDB%f_DT%f_THR%f_WR%f_BR%f_CULLMIN%d_STALE%d_PC%f_CC%f_LI%f_NO%f_BI%f_WE%f_TR%f_DI%f_EN%f_DE%f_STEP%f", 
+    len = std::sprintf(buffer, "%sPOP%d_RUNS%d_DD%f_DW%fDB%f_DT%f_THR%f_WR%f_BR%f_CULLMIN%d_STALE%d_PC%f_CC%f_LI%f_NO%f_BI%f_WE%f_TR%f_DI%f_EN%f_DE%f_STEP%f",
+                                NAME_PREFIX,
                                 POPULATION,
                                 RUNS_PER_NETWORK,
                                 DELTA_DISJOINT,

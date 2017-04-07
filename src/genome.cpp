@@ -213,7 +213,6 @@ bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dw = DELTA_WEIGHTS * weights(genome1, genome2);
     double db = DELTA_BIAS * bias(genome1, genome2);
     double dt = DELTA_TRANSFER * transfer(genome1, genome2);
-    printf("%f,%f,%f,%f\n", dd, dw, db, dt);
 
     return( dd + dw + db + dt < DELTA_THRESHOLD);
 }
