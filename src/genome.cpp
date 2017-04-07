@@ -29,6 +29,10 @@ genome::genome(pool *poolPtr, bool createNeurons = true){
             neurons.push_back(neuronPointer);
         }
     }
+
+    precision = PRECISION;
+    calculateScore = true;
+    runCounter = 0;
 }
 
 genome::genome(genome &copyGenome) {
@@ -64,7 +68,10 @@ genome::genome(genome &copyGenome) {
             neurons[gene->out]->addDisabledIncoming(gene);
         }
     }
-
+    
+    precision = PRECISION;
+    calculateScore = true;
+    runCounter = 0;
 }
 
 genome* genome::basicGenome(pool *poolPtr){

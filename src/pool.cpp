@@ -44,6 +44,7 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     this->population = population;
     this->inputs = inputs;
     this->outputs = outputs;
+    firstOfGeneration = false;
 
     for(unsigned short i = 0; i < population; i++){
         addToSpecies(genome::basicGenome(this));
@@ -231,17 +232,51 @@ void pool::newGeneration(){
     generation += 1;
 }
 
+bool pool::checkDistance(){
+    std::vector<genome*> tmpGenomes;
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            tmpGenomes.push_back(genom);
+        }
+    }
+    std::sort(tmpGenomes.begin(), tmpGenomes.end(), compareByFitness);
+    bool reRun = false;
+    for(unsigned short i = 0; i < tmpGenomes.size(); ++i){
+        if(i > 0){
+            double distance = tmpGenomes[i]->fitness - tmpGenomes[i-1]->fitness;
+            if(distance < tmpGenomes[i]->fitness * tmpGenomes[i]->precision){
+                tmpGenomes[i]->calculateScore = true;
+            }
+        }
+        if(i < tmpGenomes.size() - 1){
+            double distance = tmpGenomes[i+1]->fitness - tmpGenomes[i]->fitness;
+            if(distance < tmpGenomes[i]->fitness * tmpGenomes[i]->precision){
+                tmpGenomes[i]->calculateScore = true;
+            }
+        }
+        if(tmpGenomes[i]->calculateScore){
+            tmpGenomes[i]->precision /= 2.0;
+            reRun = true;
+        }
+    }
+    return reRun;
+}
+
 void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
-    printf("%d  %d  %d  %f  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness);
+    printf("%d  %d  %d  %f  %f  %d\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness, currentGenomes[currentGenome]->runCounter);
     currentGenome += 1;
+    firstOfGeneration = false;
     if(currentGenome >= currentGenomes.size()){
         currentGenome = 0;
         currentSpecies += 1;
         if(currentSpecies >= speciesVector.size()){
             currentSpecies = 0;
             //TODO: insert save here
-            newGeneration();
+            if(!checkDistance()){
+                newGeneration();
+                firstOfGeneration = true;
+            }
         }
     }
 }

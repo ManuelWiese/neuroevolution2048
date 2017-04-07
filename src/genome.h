@@ -27,6 +27,11 @@ public:
     pool                                *poolPointer;
     std::vector<neuron*>                neurons;
 
+    double                              precision;
+    bool                                calculateScore;
+    unsigned int                        runCounter;
+
+
                         genome(pool *poolPtr, bool createNeurons);
                         genome(genome &copyGenome);
     static genome*      basicGenome(pool *poolPointer);

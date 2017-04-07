@@ -407,41 +407,52 @@ void game::autoSolve() {
     std::vector<double> input(N*N*16, 0.0);
     std::ofstream scoreFile;
     scoreFile.open(mainPool.timestamp + ".dat", std::ofstream::out | std::ofstream::app);
-    std::vector<double> generationScore;
     std::vector<double> maxTileVector;
+    std::vector<double> generationScore;
 
     while(true){
-        double meanScore = 0.0;
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
-        std::vector<double> genomeScores;
-        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
-            field = oldField;
-            score = oldScore;
-            while(true){
-                fieldToInput(input);
-                std::vector<double> output = currentGenome->evaluate(input);
-                std::vector<unsigned char> sorted = sortOutput(output);
-                for(auto const& x : sorted){
-                    bool legalmove = move(x);
-                    if(legalmove)
-                        break;
-                }
-                if(!spawnNumber())
-                    break;
-            }
-            std::vector<double> flatField = fieldToFlatField();
-            meanScore += getMaxScore(flatField);//getMaxTile();
-            scoreFile << score << std::endl;
-            generationScore.push_back(score);
-            genomeScores.push_back(score);
-            maxTileVector.push_back(getMaxTile());
-        }
-        currentGenome->fitness = meanScore / RUNS_PER_NETWORK;
-        if(currentGenome->fitness > mainPool.maxFitness)
-            mainPool.maxFitness = currentGenome->fitness;
+        if(currentGenome->calculateScore){
+        	double meanScore = 0.0;
+        	double diff = 1.0;
+        	unsigned int runs = 0;
+        	double lastFitness = currentGenome->fitness;
+        	while(diff > currentGenome->precision){
+		        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
+		            field = oldField;
+		            score = oldScore;
+		            while(true){
+		                fieldToInput(input);
+		                std::vector<double> output = currentGenome->evaluate(input);
+		                std::vector<unsigned char> sorted = sortOutput(output);
+		                for(auto const& x : sorted){
+		                    bool legalmove = move(x);
+		                    if(legalmove)
+		                        break;
+		                }
+		                if(!spawnNumber())
+		                    break;
+		            }
+		            std::vector<double> flatField = fieldToFlatField();
+		            meanScore += getMaxScore(flatField);//getMaxTile();
+		            scoreFile << score << std::endl;
+		            maxTileVector.push_back(getMaxTile());
+		            runs++;
+		        }
+		        currentGenome->fitness = (currentGenome->fitness * currentGenome->runCounter + meanScore)/(runs + currentGenome->runCounter);
+		        diff = std::abs(currentGenome->fitness - lastFitness)/currentGenome->fitness;
+		        lastFitness = currentGenome->fitness;
+	    	}
+	    	currentGenome->runCounter += runs;
+	    	currentGenome->calculateScore = false;
+	        if(currentGenome->fitness > mainPool.maxFitness)
+	            mainPool.maxFitness = currentGenome->fitness;
+	    }
+	    //this is biased...but not by much i hope
+	    generationScore.push_back(currentGenome->fitness);
         mainPool.nextGenome();
 
-        if(mainPool.currentGenome == 0 && mainPool.currentSpecies == 0){
+        if(mainPool.firstOfGeneration){
             writeGenerationScore(generationScore, mainPool);
             writeTileProbability(maxTileVector, mainPool);
             writeMutationRates(mainPool);

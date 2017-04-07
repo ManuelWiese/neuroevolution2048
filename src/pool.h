@@ -17,6 +17,7 @@ public:
     unsigned short          population;
     unsigned short          inputs;
     unsigned short          outputs;
+    bool                    firstOfGeneration;
 
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
                         ~pool();
@@ -28,6 +29,7 @@ public:
     void                removeWeakSpecies();
     void                addToSpecies(genome* child);
     void                newGeneration();
+    bool                checkDistance();
     void                nextGenome();
 };
 
