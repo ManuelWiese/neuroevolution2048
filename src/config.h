@@ -28,8 +28,8 @@
 
 #define STEPSIZE  0.1
 
-#define PRECISION 0.1
+#define PRECISION 0.01
 
-#define NAME_PREFIX	"checkDistance"
+#define NAME_PREFIX	"checkDistance4"
 #define SAVEPATH  "./save/"
 

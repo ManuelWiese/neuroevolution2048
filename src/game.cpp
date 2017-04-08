@@ -413,11 +413,10 @@ void game::autoSolve() {
     while(true){
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
         if(currentGenome->calculateScore){
-        	double meanScore = 0.0;
         	double diff = 1.0;
-        	unsigned int runs = 0;
         	double lastFitness = currentGenome->fitness;
         	while(diff > currentGenome->precision){
+        		double meanScore = 0.0;
 		        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
 		            field = oldField;
 		            score = oldScore;
@@ -437,16 +436,13 @@ void game::autoSolve() {
 		            meanScore += getMaxScore(flatField);//getMaxTile();
 		            scoreFile << score << std::endl;
 		            maxTileVector.push_back(getMaxTile());
-		            runs++;
 		        }
-		        currentGenome->fitness = (currentGenome->fitness * currentGenome->runCounter + meanScore)/(runs + currentGenome->runCounter);
+		        currentGenome->fitness = (currentGenome->fitness * currentGenome->runCounter + meanScore)/(RUNS_PER_NETWORK + currentGenome->runCounter);
+		        currentGenome->runCounter += RUNS_PER_NETWORK;
 		        diff = std::abs(currentGenome->fitness - lastFitness)/currentGenome->fitness;
 		        lastFitness = currentGenome->fitness;
 	    	}
-	    	currentGenome->runCounter += runs;
 	    	currentGenome->calculateScore = false;
-	        if(currentGenome->fitness > mainPool.maxFitness)
-	            mainPool.maxFitness = currentGenome->fitness;
 	    }
 	    //this is biased...but not by much i hope
 	    generationScore.push_back(currentGenome->fitness);

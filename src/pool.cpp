@@ -194,7 +194,17 @@ void pool::addToSpecies(genome* child){
     speciesVector.push_back(newSpecies);
 }
 
+void pool::setMaxFitness(){
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            if(genom->fitness > maxFitness)
+                maxFitness = genom->fitness;
+        }
+    }
+}
+
 void pool::newGeneration(){
+    setMaxFitness();
     cullSpecies(false);
     rankGenomes();
     removeStaleSpecies();
@@ -276,6 +286,11 @@ void pool::nextGenome(){
             if(!checkDistance()){
                 newGeneration();
                 firstOfGeneration = true;
+                for(auto const& spec : speciesVector){
+                    for(auto const& genom : spec->genomes){
+                        genom->calculateScore = true;
+                    }
+                }
             }
         }
     }

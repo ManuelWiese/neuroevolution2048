@@ -28,6 +28,7 @@ public:
     void                removeStaleSpecies();
     void                removeWeakSpecies();
     void                addToSpecies(genome* child);
+    void                setMaxFitness();
     void                newGeneration();
     bool                checkDistance();
     void                nextGenome();
