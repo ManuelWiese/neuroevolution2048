@@ -207,14 +207,13 @@ void pool::setMaxFitness(){
 void pool::newGeneration(){
     setMaxFitness();
     cullSpecies(false);
-    rankGenomes();
     removeStaleSpecies();
     rankGenomes();
 
     for(auto const& spec : speciesVector)
         spec->calculateAverageFitness();
 
-    removeWeakSpecies();
+    //removeWeakSpecies();
     double avgFitness = getAverageFitness();
 
     std::vector<genome*> children;
@@ -243,25 +242,45 @@ void pool::newGeneration(){
     generation += 1;
 }
 void pool::setPrecision(){
-    double mean = 0.0;
+    double mean, min = std::numeric_limits<double>::max(), max = 0.0;
+    std::vector<double> boundary;
+    std::vector<double> fitness;
     for(auto const& spec : speciesVector){
         for(auto const& genom : spec->genomes){
+            fitness.push_back(genom->fitness);
+            if(genom->fitness < min)
+                min = genom->fitness;
+            if(genom->fitness > max)
+                max = genom->fitness;
             mean += genom->fitness;
         }
     }
-    mean /= population;
-    double variance = 0.0;
-    for(auto const& spec : speciesVector){
-        for(auto const& genom : spec->genomes){
-            variance += pow(genom->fitness-mean,2);
+    boundary.push_back(min*(1+targetPrecision));
+    double upperBoundary = boundary[0];
+    while(upperBoundary < max){
+        upperBoundary *= 1 + targetPrecision;
+        boundary.push_back(upperBoundary);
+    }
+    std::vector<unsigned int> freq(boundary.size(), 0);
+    std::sort(fitness.begin(), fitness.end());
+    std::vector<double>::iterator fitnessIterator= fitness.begin();
+    for(unsigned int i = 0; i < boundary.size(); i++){
+        while((*fitnessIterator) < boundary[i] && fitnessIterator != fitness.end()){
+            freq[i]++;
+            fitnessIterator++;
         }
     }
-    variance /= (population - 1);
-    stdev = sqrt(variance);
-    targetPrecision = 0.1*sqrt(variance)/mean;
-    printf("Mean of Generation: %f\n", mean);
-    printf("Variance: %f\n", variance);
-    printf("Target precision: %f\n", targetPrecision);
+    double entropy = 0;
+    for(unsigned int i = 0; i < freq.size(); i++){
+        if(freq[i] != 0)
+            entropy -= freq[i] * log(freq[i] * 1.0 / population) / population;
+    }
+    printf("entropy: %f\n", entropy);
+    if(entropy > log(population/CULL_MINIMUM))
+        targetPrecision *= 1.25;
+    else
+        targetPrecision /= 1.25;
+    printf("newPrecision: %f\n", targetPrecision);
 }
 
 void pool::nextGenome(){

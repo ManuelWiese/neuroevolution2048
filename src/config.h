@@ -6,7 +6,7 @@
 #define DELTA_BIAS 0.4
 #define DELTA_TRANSFER 1.0
 #define DELTA_RATES	0.0
-#define DELTA_THRESHOLD  3.0
+#define DELTA_THRESHOLD  2.0
 
 #define WEIGHT_RANGE  2.0
 #define BIAS_RANGE  2.0
@@ -30,5 +30,5 @@
 
 #define PRECISION 0.1
 
-#define NAME_PREFIX	"setPrecision"
+#define NAME_PREFIX	"entropy"
 #define SAVEPATH  "./save/"
