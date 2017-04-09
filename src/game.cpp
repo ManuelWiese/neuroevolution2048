@@ -415,7 +415,7 @@ void game::autoSolve() {
         if(currentGenome->calculateScore){
         	double diff = 1.0;
         	double lastFitness = currentGenome->fitness;
-        	while(diff > currentGenome->precision){
+        	while(currentGenome->precision > currentGenome->targetPrecision){
         		double meanScore = 0.0;
 		        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
 		            field = oldField;
@@ -433,14 +433,12 @@ void game::autoSolve() {
 		                    break;
 		            }
 		            std::vector<double> flatField = fieldToFlatField();
-		            meanScore += getMaxScore(flatField);//getMaxTile();
+		            //meanScore += getMaxScore(flatField);//getMaxTile();
+		            currentGenome->scores.push_back(getMaxScore(flatField));
 		            scoreFile << score << std::endl;
 		            maxTileVector.push_back(getMaxTile());
 		        }
-		        currentGenome->fitness = (currentGenome->fitness * currentGenome->runCounter + meanScore)/(RUNS_PER_NETWORK + currentGenome->runCounter);
-		        currentGenome->runCounter += RUNS_PER_NETWORK;
-		        diff = std::abs(currentGenome->fitness - lastFitness)/currentGenome->fitness;
-		        lastFitness = currentGenome->fitness;
+		        currentGenome->calculateFitness();
 	    	}
 	    	currentGenome->calculateScore = false;
 	    }

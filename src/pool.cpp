@@ -243,6 +243,7 @@ void pool::newGeneration(){
 }
 
 bool pool::checkDistance(){
+    return false;
     std::vector<genome*> tmpGenomes;
     for(auto const& spec : speciesVector){
         for(auto const& genom : spec->genomes){
@@ -251,22 +252,15 @@ bool pool::checkDistance(){
     }
     std::sort(tmpGenomes.begin(), tmpGenomes.end(), compareByFitness);
     bool reRun = false;
-    for(unsigned short i = 0; i < tmpGenomes.size(); ++i){
+    for(unsigned short i = tmpGenomes.size()/2; i < tmpGenomes.size(); ++i){
         if(i > 0){
-            double distance = tmpGenomes[i]->fitness - tmpGenomes[i-1]->fitness;
-            if(distance < tmpGenomes[i]->fitness * tmpGenomes[i]->precision){
+            if(2*(tmpGenomes[i]->fitness - tmpGenomes[i-1]->fitness)/(tmpGenomes[i]->fitness + tmpGenomes[i-1]->fitness) < PRECISION)
+                continue;
+            if(tmpGenomes[i]->precision > tmpGenomes[i-1]->precision){
                 tmpGenomes[i]->calculateScore = true;
+                tmpGenomes[i]->targetPrecision -= PRECISION_STEP;
+                reRun = true;
             }
-        }
-        if(i < tmpGenomes.size() - 1){
-            double distance = tmpGenomes[i+1]->fitness - tmpGenomes[i]->fitness;
-            if(distance < tmpGenomes[i]->fitness * tmpGenomes[i]->precision){
-                tmpGenomes[i]->calculateScore = true;
-            }
-        }
-        if(tmpGenomes[i]->calculateScore){
-            tmpGenomes[i]->precision /= 2.0;
-            reRun = true;
         }
     }
     return reRun;
@@ -274,7 +268,7 @@ bool pool::checkDistance(){
 
 void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
-    printf("%d  %d  %d  %f  %f  %d\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, maxFitness, currentGenomes[currentGenome]->runCounter);
+    printf("%d  %d  %d  %f  %f  %d  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, currentGenomes[currentGenome]->precision, currentGenomes[currentGenome]->scores.size(), maxFitness);
     currentGenome += 1;
     firstOfGeneration = false;
     if(currentGenome >= currentGenomes.size()){
@@ -286,11 +280,6 @@ void pool::nextGenome(){
             if(!checkDistance()){
                 newGeneration();
                 firstOfGeneration = true;
-                for(auto const& spec : speciesVector){
-                    for(auto const& genom : spec->genomes){
-                        genom->calculateScore = true;
-                    }
-                }
             }
         }
     }

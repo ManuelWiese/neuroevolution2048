@@ -27,9 +27,10 @@ public:
     pool                                *poolPointer;
     std::vector<neuron*>                neurons;
 
+    std::vector<double>                 scores;
     double                              precision;
+    double                              targetPrecision;
     bool                                calculateScore;
-    unsigned int                        runCounter;
 
 
                         genome(pool *poolPtr, bool createNeurons);
@@ -63,6 +64,7 @@ public:
     void                transferMutate();
     void                deleteDisabledMutate();
 
+    void                calculateFitness();
 };
 
 #endif //GENOME_H

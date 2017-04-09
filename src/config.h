@@ -1,5 +1,5 @@
 #define POPULATION  150
-#define RUNS_PER_NETWORK 10
+#define RUNS_PER_NETWORK 100
 
 #define DELTA_DISJOINT  2.0
 #define DELTA_WEIGHTS  0.4
@@ -29,7 +29,8 @@
 #define STEPSIZE  0.1
 
 #define PRECISION 0.01
+#define PRECISION_STEP 0.001
 
-#define NAME_PREFIX	"checkDistance4"
+#define NAME_PREFIX	"checkDistance5"
 #define SAVEPATH  "./save/"
 

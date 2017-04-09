@@ -29,10 +29,9 @@ genome::genome(pool *poolPtr, bool createNeurons = true){
             neurons.push_back(neuronPointer);
         }
     }
-
-    precision = PRECISION;
+    precision = 1.0;
+    targetPrecision = PRECISION;
     calculateScore = true;
-    runCounter = 0;
 }
 
 genome::genome(genome &copyGenome) {
@@ -68,10 +67,9 @@ genome::genome(genome &copyGenome) {
             neurons[gene->out]->addDisabledIncoming(gene);
         }
     }
-    
-    precision = PRECISION;
+    precision = 1.0;
+    targetPrecision = PRECISION;
     calculateScore = true;
-    runCounter = 0;
 }
 
 genome* genome::basicGenome(pool *poolPtr){
@@ -575,4 +573,18 @@ void genome::deleteDisabledMutate(){
         neurons[pick->out]->removeDisabledIncoming(pick);
     }
     return;
+}
+
+void genome::calculateFitness(){
+    double sum = 0.0;
+    for(auto const& score : scores)
+        sum += score;
+    double mean = sum/scores.size();
+    double variance = 0.0;
+    for(auto const& score : scores){
+        variance += pow((sum-score)/(scores.size()-1)-mean,2);
+    }
+    variance *= (scores.size()-1.0)/scores.size();
+    precision = sqrt(variance)/mean;
+    fitness = mean;
 }
