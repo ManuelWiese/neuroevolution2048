@@ -18,6 +18,8 @@ public:
     unsigned short          inputs;
     unsigned short          outputs;
     bool                    firstOfGeneration;
+    double                  stdev;
+    double                  targetPrecision;
 
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
                         ~pool();
@@ -30,7 +32,7 @@ public:
     void                addToSpecies(genome* child);
     void                setMaxFitness();
     void                newGeneration();
-    bool                checkDistance();
+    void                setPrecision();
     void                nextGenome();
 };
 

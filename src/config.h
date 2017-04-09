@@ -1,12 +1,12 @@
 #define POPULATION  150
 #define RUNS_PER_NETWORK 100
 
-#define DELTA_DISJOINT  2.0
+#define DELTA_DISJOINT  1.0
 #define DELTA_WEIGHTS  0.4
 #define DELTA_BIAS 0.4
-#define DELTA_TRANSFER 2.0
+#define DELTA_TRANSFER 1.0
 #define DELTA_RATES	0.0
-#define DELTA_THRESHOLD  1.0
+#define DELTA_THRESHOLD  3.0
 
 #define WEIGHT_RANGE  2.0
 #define BIAS_RANGE  2.0
@@ -28,9 +28,7 @@
 
 #define STEPSIZE  0.1
 
-#define PRECISION 0.01
-#define PRECISION_STEP 0.001
+#define PRECISION 0.1
 
-#define NAME_PREFIX	"checkDistance5"
+#define NAME_PREFIX	"setPrecision"
 #define SAVEPATH  "./save/"
-

@@ -382,7 +382,8 @@ static void writeStats(pool &mainPool){
     }
 
     statsFile << mainPool.generation << "   " << neurons*1.0/mainPool.population << "   " << activeNeurons*1.0/mainPool.population << " " << mutableNeurons*1.0/mainPool.population << "    "
-              << genes*1.0/mainPool.population << " " << enabledGenes*1.0/mainPool.population << "  " << disabledGenes*1.0/mainPool.population << " " << mainPool.speciesVector.size() << std::endl;
+              << genes*1.0/mainPool.population << " " << enabledGenes*1.0/mainPool.population << "  " << disabledGenes*1.0/mainPool.population << " " << mainPool.speciesVector.size() << " "
+              << mainPool.stdev << "    " << mainPool.targetPrecision << std::endl;
 
     statsFile.close();
 }
@@ -412,10 +413,10 @@ void game::autoSolve() {
 
     while(true){
         genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
-        if(currentGenome->calculateScore){
+        if(/*currentGenome->calculateScore*/ true){
         	double diff = 1.0;
         	double lastFitness = currentGenome->fitness;
-        	while(currentGenome->precision > currentGenome->targetPrecision){
+        	while(currentGenome->precision > mainPool.targetPrecision){
         		double meanScore = 0.0;
 		        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
 		            field = oldField;

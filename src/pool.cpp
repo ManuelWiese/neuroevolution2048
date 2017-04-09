@@ -45,6 +45,7 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     this->inputs = inputs;
     this->outputs = outputs;
     firstOfGeneration = false;
+    targetPrecision = PRECISION;
 
     for(unsigned short i = 0; i < population; i++){
         addToSpecies(genome::basicGenome(this));
@@ -241,29 +242,26 @@ void pool::newGeneration(){
 
     generation += 1;
 }
-
-bool pool::checkDistance(){
-    return false;
-    std::vector<genome*> tmpGenomes;
+void pool::setPrecision(){
+    double mean = 0.0;
     for(auto const& spec : speciesVector){
         for(auto const& genom : spec->genomes){
-            tmpGenomes.push_back(genom);
+            mean += genom->fitness;
         }
     }
-    std::sort(tmpGenomes.begin(), tmpGenomes.end(), compareByFitness);
-    bool reRun = false;
-    for(unsigned short i = tmpGenomes.size()/2; i < tmpGenomes.size(); ++i){
-        if(i > 0){
-            if(2*(tmpGenomes[i]->fitness - tmpGenomes[i-1]->fitness)/(tmpGenomes[i]->fitness + tmpGenomes[i-1]->fitness) < PRECISION)
-                continue;
-            if(tmpGenomes[i]->precision > tmpGenomes[i-1]->precision){
-                tmpGenomes[i]->calculateScore = true;
-                tmpGenomes[i]->targetPrecision -= PRECISION_STEP;
-                reRun = true;
-            }
+    mean /= population;
+    double variance = 0.0;
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            variance += pow(genom->fitness-mean,2);
         }
     }
-    return reRun;
+    variance /= (population - 1);
+    stdev = sqrt(variance);
+    targetPrecision = 0.1*sqrt(variance)/mean;
+    printf("Mean of Generation: %f\n", mean);
+    printf("Variance: %f\n", variance);
+    printf("Target precision: %f\n", targetPrecision);
 }
 
 void pool::nextGenome(){
@@ -277,10 +275,9 @@ void pool::nextGenome(){
         if(currentSpecies >= speciesVector.size()){
             currentSpecies = 0;
             //TODO: insert save here
-            if(!checkDistance()){
-                newGeneration();
-                firstOfGeneration = true;
-            }
+            setPrecision();
+            newGeneration();
+            firstOfGeneration = true;
         }
     }
 }
