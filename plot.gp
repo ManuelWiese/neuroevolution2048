@@ -7,15 +7,14 @@ tileProbabilityFile = name."_tileprobability.dat"
 mutationRatesFile = name."_mutationrates.dat"
 statsFile = name."_stats.dat"
 
-set ytics mirror
-unset y2tics
-unset y2label
-
 set term GPVAL_TERM 0
 
+set ytics nomirror
+set y2tics
 set xlabel "generation"
-set ylabel "average score"
-unset key
+set ylabel "score"
+set y2label "precision"
+set key top left
 
 set style line 1 lw 1 dt '.' lc rgb "gray"
 set style line 11 lw 1 dt '_' lc rgb "#A00000"
@@ -27,20 +26,30 @@ set style line 22 lw 1 dt '_' lc rgb "#0000FF"
 set style line 23 lw 1 dt '_' lc rgb "#8080FF"
 set style line 24 lw 1 dt '_' lc rgb "#C0C0FF"
 set style line 31 lw 1 dt '_' lc rgb "#00A000"
+set style line 41 lw 1 dt '_' lc rgb "#00FF00"
 
-stats generationFile u 2 name 'y' nooutput;
+stats generationFile u 4 name 'min' nooutput;
+stats generationFile u 5 name 'max' nooutput;
 
-set yrange [y_min:y_max]
+set yrange [min_min:max_max]
 
-p generationFile u 1:2,\
-8*2**9 w l ls 1,\
-9*2**10 w l ls 1,\
-10*2**11 w l ls 1,\
-11*2**12 w l ls 1
+p generationFile u 1:2 title "score" w l ls 22,\
+generationFile u 1:4 title "min" w l ls 12,\
+generationFile u 1:5 title "max" w l ls 41,\
+generationFile u 1:3 title "precision" axes x1y2 w l ls 1,\
+8*2**9 notitle w l ls 1,\
+9*2**10 notitle w l ls 1,\
+10*2**11 notitle w l ls 1,\
+11*2**12 notitle w l ls 1
 
 set term GPVAL_TERM 1
 
+set ytics mirror
+unset y2tics
+unset y2label
+
 set yrange [*:*]
+set xrange [*:*]
 set ylabel "success rate"
 set key top left
 
@@ -58,15 +67,15 @@ set yrange [*:*]
 set ylabel "rate"
 set key top left
 
-p mutationRatesFile u 1:2:3 title "weight mutate" w errorbars ls 11,\
-mutationRatesFile u 1:4:5 title "link mutate" w errorbars ls 12,\
-mutationRatesFile u 1:6:7 title "bias mutate" w errorbars ls 13,\
-mutationRatesFile u 1:8:9 title "node mutate" w errorbars ls 14,\
-mutationRatesFile u 1:10:11 title "enable mutate" w errorbars ls 21,\
-mutationRatesFile u 1:12:13 title "disable mutate" w errorbars ls 22,\
-mutationRatesFile u 1:14:15 title "transfer mutate" w errorbars ls 23,\
-mutationRatesFile u 1:16:17 title "delete mutate" w errorbars ls 24,\
-mutationRatesFile u 1:18:19 title "step size mutate" w errorbars ls 31
+p mutationRatesFile u 1:2 title "weight mutate" ls 11,\
+mutationRatesFile u 1:3 title "link mutate" ls 12,\
+mutationRatesFile u 1:4 title "bias mutate" ls 13,\
+mutationRatesFile u 1:5 title "node mutate" ls 14,\
+mutationRatesFile u 1:6 title "enable mutate" ls 21,\
+mutationRatesFile u 1:7title "disable mutate" ls 22,\
+mutationRatesFile u 1:8 title "transfer mutate" ls 23,\
+mutationRatesFile u 1:9 title "delete mutate" ls 24,\
+mutationRatesFile u 1:10 title "step size mutate" ls 31
 
 set term GPVAL_TERM 3
 

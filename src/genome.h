@@ -28,6 +28,7 @@ public:
     std::vector<neuron*>                neurons;
 
     std::vector<double>                 scores;
+    std::vector<unsigned char>          maxTile;
     double                              precision;
     double                              targetPrecision;
     bool                                calculateScore;

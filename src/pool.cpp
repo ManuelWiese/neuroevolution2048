@@ -206,15 +206,103 @@ void pool::setMaxFitness(){
 }
 
 void pool::writeStats(){
-    double mean = 0;
-    for(auto const& spec : speciesVector)
-        for(auto const& genom : spec->genomes)
+    //Write generation data: mean, variance?, precision, bestOf a generation
+    double mean = 0.0, min = std::numeric_limits<double>::max(), max = std::numeric_limits<double>::min();
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
             mean += genom->fitness;
+            min = std::min(genom->fitness, min);
+            max = std::max(genom->fitness, max);
+        }
+    }
     mean /= population;
-    std::ofstream generationFile;
-    generationFile.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
-    generationFile << generation << "  " << mean << std::endl;
-    generationFile.close();
+    std::ofstream fileHandle;
+    fileHandle.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    " 
+               << mean << "    "
+               << targetPrecision << "    "
+               << min << "    "
+               << max << "    "
+               << std::endl;
+    fileHandle.close();
+
+    //write tile probabilities
+    std::vector<double> tileProbabilityGeneration(16, 0.0);
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            std::vector<double> tileProbability(16, 0.0);
+            for(auto const& maxT : genom->maxTile){
+                for(unsigned char tile = 0; tile < 16; ++tile){
+                    if(tile <= maxT)
+                        tileProbability[tile]++;
+                }
+            }
+            for(unsigned char tile = 0; tile < 16; ++tile)
+                tileProbabilityGeneration[tile] += (tileProbability[tile]/genom->maxTile.size())/population;
+        }
+    }
+    fileHandle.open(timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    ";
+    for(auto const& prob : tileProbabilityGeneration)
+        fileHandle << prob << "    ";
+    fileHandle << std::endl;
+    fileHandle.close();
+
+    //write mean mutation rates
+    std::map<std::string, double> meanMutationRates = {{"weight", 0.0}, {"link", 0.0}, {"bias", 0.0}, {"node", 0.0}, {"enable", 0.0}, {"disable", 0.0}, {"transfer", 0.0}, {"delete", 0.0}, {"step", 0.0}};
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            for(auto const& mutation : genom->mutationRates)
+                meanMutationRates[mutation.first] += mutation.second;
+        }
+    }
+    fileHandle.open(timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    "
+               << meanMutationRates["weight"] << "    "
+               << meanMutationRates["link"] << "    "
+               << meanMutationRates["bias"] << "    "
+               << meanMutationRates["node"] << "    "
+               << meanMutationRates["enable"] << "    "
+               << meanMutationRates["disable"] << "    "
+               << meanMutationRates["transfer"] << "    "
+               << meanMutationRates["delete"] << "    "
+               << meanMutationRates["step"] << "    ";
+    
+    fileHandle << std::endl;
+    fileHandle.close();
+
+    //write network statistics mean count of: neurons, active neurons, mutable neurons, genes, enabled genes, disabled genes, deleted genes?
+    unsigned int neurons = 0, activeNeurons = 0, mutableNeurons = 0;
+    unsigned int genes = 0, disabledGenes = 0, enabledGenes = 0;
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            genes += genom->genes.size();
+            for(auto const& gen : genom->genes){
+                if(gen->enabled)
+                    enabledGenes++;
+                else
+                    disabledGenes++;
+            }
+            neurons += genom->neurons.size();
+            mutableNeurons += genom->neurons.size() - inputs;
+            for(auto const& neur : genom->neurons){
+                if(neur->activated)
+                    activeNeurons++;
+            }
+        } 
+    }
+
+    fileHandle.open(timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    "
+               << neurons/population << "    "
+               << activeNeurons/population << "    "
+               << mutableNeurons/population << "    "
+               << genes/population << "    "
+               << enabledGenes/population << "    "
+               << disabledGenes/population << "    "
+               << speciesVector.size() << "    "
+               << std::endl;
+    fileHandle.close();
 }
 
 void pool::setPrecision(){

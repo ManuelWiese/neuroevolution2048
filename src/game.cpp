@@ -263,6 +263,7 @@ void game_t::play(genome* genom){
                     break;
             }
             genom->scores.push_back(getScore(board));
+            genom->maxTile.push_back(getMaxTile(board));
         }
         genom->calculateFitness();
     }
