@@ -1,457 +1,285 @@
 #include "game.h"
-#include "pool.h"
-#include <fstream>
 
-game::game() {
-    for( unsigned char i = 0; i < field.size(); i++ ) {
-        field[i] = 0;
+game_t::game_t(){
+    for(unsigned int row = 0; row < 65536; ++row){
+        pushRowRight[row] = row ^ pushRow(row);
+        pushRowLeft[row] = row ^ reverseRow(pushRow(reverseRow(row)));
+        pushColUp[row] = rowToColumn(row) ^ rowToColumn(pushRow(row));
+        pushColDown[row] = rowToColumn(row) ^ rowToColumn(reverseRow(pushRow(reverseRow(row))));
     }
-    for(unsigned char i = 0; i <= N; i++){
-        powersOf16[i] = pow(16, i);
-    }
-    emptyCells = N*N-2;
-    score = 0;
-    spawnNumber();
-    spawnNumber();
-
-    fillPushList();
 }
 
-bool game::spawnNumber() {
-    std::vector<unsigned char> emptyList;
-    for(unsigned char index = 0; index < N*N; ++index){
-        if(!getCell(index))
-            emptyList.push_back(index);
-    }
-    if(!emptyList.size())
-        return false;
-
-    unsigned char spawn = dis(gen) > 0.9 ? 2 : 1;
-    unsigned char pick = (unsigned char)(dis(gen) * emptyList.size());
-    setCell(emptyList[pick], spawn);
-    return true;
+inline board_t game_t::initBoard(){
+    board_t board = 0;
+    spawnTile(board);
+    spawnTile(board);
+    return board;
 }
 
-void game::print(bool printField = true) {
-    std::cout << score << std::endl;
-    if( printField) {
-        for( unsigned char i = 0; i < N; i++ ) {
-            for( unsigned char j = 0; j < N; j++ ) {
-                std::cout << (int)getCell(i,j) << "  ";
-            }
-            std::cout << std::endl;
+void game_t::print(board_t board){
+    for(index_t i = 0; i < N; ++i){
+        for(index_t j = 0; j < N; ++j){
+            printf("%2d ", getCell(board, i, j));
         }
-        std::cout << std::endl;
+        printf("\n");
     }
+    printf("\n");
 }
 
-unsigned char game::getCell(unsigned char i, unsigned char j) {
-    return((field[j] >> 4*i) & 15);
+inline void game_t::setCell(board_t &board, index_t index, value_t value){
+    board &= ~(0xFULL << exponentBits * index);
+    board |= ((board_t)value << exponentBits * index);
 }
 
-unsigned char game::getCell(unsigned char index) {
-    return getCell(index%N, index/N);
+inline void game_t::setCell(board_t &board, index_t i, index_t j, value_t value){
+    setCell(board, i*N+j, value);
 }
 
-//TODO: faster with just - and + operation using getCell?
-void game::setCell(unsigned char i, unsigned char j, unsigned char value) {
-    unsigned int mask = 0;
-    for( unsigned char count = 0; count < field.size(); count++ ) {
-        if( count != i ) {
-            mask += 15*powersOf16[count];
-        }
+inline value_t game_t::getCell(board_t board, index_t index){
+    return (board >> exponentBits * index) & 0xFULL;
+}
+
+inline value_t game_t::getCell(board_t board, index_t i, index_t j){
+    return getCell(board, i*N+j);
+}
+
+inline void game_t::spawnTile(board_t &board){
+    std::vector<index_t> empty;
+    empty.reserve(16);
+    for(index_t index = 0; index < N*N; ++index){
+        if(!getCell(board, index))
+            empty.push_back(index);
     }
-    field[j] &= mask;
-    field[j] += value*powersOf16[i];
+
+    if(!empty.size())
+        return;
+
+    value_t spawn = distribution(generator) > 0.9 ? 2 : 1;
+    if(empty.size() != 1){
+    	index_t pick = (index_t)(distribution(generator) * empty.size());
+    	board |= ((board_t)spawn << exponentBits * empty[pick]);
+	} else {
+		board |= ((board_t)spawn << exponentBits * empty[0]);
+	}
+
 }
 
-void game::setCell(unsigned char index, unsigned char value){
-    setCell(index%N, index/N, value);
-}
-
-std::vector<unsigned char> game::getHistogram(){
-    std::vector<unsigned char> output(16,0);
-    for( unsigned char i = 0; i < N; i++) {
-        for( unsigned char j = 0; j < N; j++) {
-            output[getCell(i,j)]++;
-        }
+inline score_t game_t::getScore(board_t board){
+    score_t score = 0;
+    for(index_t index = 0; index < N*N; ++index){
+        score_t tile = getCell(board, index);
+        if(tile < 2)
+            continue;
+        score += (tile-1)*pow(2, tile);
     }
-    return output;
+    return score;
 }
 
-unsigned char game::getMaxTile(){
-    unsigned char max = 0;
-    for(unsigned char i = 0; i < N; i++){
-        for(unsigned char j = 0; j < N; j++){
-            unsigned char cell = getCell(i,j);
-            if(max < cell)
-                max = cell;
-        }
+inline value_t game_t::getMaxTile(board_t board){
+    value_t max = 0;
+    for(index_t index = 0; index < N*N; ++index){
+        value_t cell = getCell(board, index);
+        if(cell > max)
+            max = cell;
     }
     return max;
 }
 
-void game::fillPushList() {
-    for( unsigned int row = 0; row < powersOf16[N]; row++ ) {
-        bool merged = false;
-        unsigned int pushScore = 0;
-        std::array<unsigned char, N> rowArray;
+//transpose using 6 swaps
+// 0 1 2 3          0 4 8 c
+// 4 5 6 7          1 5 9 d
+// 8 9 a b          2 6 a e
+// c d e f          3 7 b f
+inline board_t game_t::transpose(board_t board){
+    board_t transposed = board;
 
-        unsigned char emptyCells = 0;
-        bool monoUp = true;
-        bool monoDown = true;
+    setCell(transposed, 1, getCell(board, 4));
+    setCell(transposed, 4, getCell(board, 1));
 
-        for( unsigned char i = 0; i < N; i++) {
-            rowArray[i] = (row >> i*4) & 15;
-            if( rowArray[i] == 0)
-                emptyCells++;
-            if( i != 0 && rowArray[i] >= rowArray[i-1]) {
-                monoDown = false;
-            } else if( i != 0 && rowArray[i] <= rowArray[i-1]) {
-                monoUp = false;
-            }
+    setCell(transposed, 2, getCell(board, 8));
+    setCell(transposed, 8, getCell(board, 2));
 
-        }
-        //std::cout << row << "   " << (int)emptyCells << "    " << (int)monotonous << std::endl;
-        emptyList.push_back(emptyCells);
-        if( monoUp && monoDown )
-            monotonousList.push_back(0);
-        else if( monoUp )
-            monotonousList.push_back(1);
-        else if( monoDown )
-                monotonousList.push_back(-1);
-        else
-            monotonousList.push_back(0);
+    setCell(transposed, 3, getCell(board, 12));
+    setCell(transposed, 12, getCell(board, 3));
 
-        //std::cout << monotonousList.size() << std::endl;
+    setCell(transposed, 6, getCell(board, 9));
+    setCell(transposed, 9, getCell(board, 6));
 
+    setCell(transposed, 7, getCell(board, 13));
+    setCell(transposed, 13, getCell(board, 7));
 
-        for( char i = N-1; i >= 0; i--) {
-            if( rowArray[i] != 0 ) {
-                for( unsigned char j = i+1; j < N; j++ ) {
-                    if( rowArray[j] == 0 ) {
-                        rowArray[j] = rowArray[j-1];
-                        rowArray[j-1] = 0;
-                        if( j == N-1 )
-                            merged = false;
-                    } else if( rowArray[j] == rowArray[j-1] && !merged ) {
-                        rowArray[j] += 1;
-                        rowArray[j-1] = 0;
-                        pushScore += pow(2, rowArray[j]);
-                        merged = true;
-                        break;
-                    } else {
+    setCell(transposed, 11, getCell(board, 14));
+    setCell(transposed, 14, getCell(board, 11));
+
+    return transposed;
+}
+
+inline row_t game_t::reverseRow(row_t row){
+    row_t reversed = 0;
+    std::array<value_t, N> rowArray;
+
+    rowArray[3] = row & 0x00F;
+    rowArray[2] = (row >> exponentBits) & 0x00F;
+    rowArray[1] = (row >> 2*exponentBits) & 0x00F;
+    rowArray[0] = (row >> 3*exponentBits) & 0x00F;
+    reversed = (rowArray[0]) + (rowArray[1] << exponentBits) + (rowArray[2] << 2*exponentBits) + (rowArray[3] << 3*exponentBits);
+    return reversed;
+}
+
+static const board_t COLUMN_MASK = 0x000F000F000F000FULL;
+board_t game_t::rowToColumn(row_t row){
+    board_t tmpRow = row;
+    return (tmpRow | (tmpRow << 12ULL) | (tmpRow << 24ULL) | (tmpRow << 36ULL)) & COLUMN_MASK;
+}
+
+row_t game_t::pushRow(row_t row){
+    std::array<value_t, N> rowArray;
+
+    rowArray[0] = row & 0x000F;
+    rowArray[1] = (row >> exponentBits) & 0x000F;
+    rowArray[2] = (row >> 2*exponentBits) & 0x000F;
+    rowArray[3] = (row >> 3*exponentBits) & 0x000F;
+
+    //printf("%d %d %d %d\n", rowArray[0], rowArray[1], rowArray[2], rowArray[3] );
+
+    bool merged = false;
+    for( char i = N-1; i >= 0; i--) {
+        if( rowArray[i] != 0 ) {
+            for( unsigned char j = i+1; j < N; j++ ) {
+                if( rowArray[j] == 0 ) {
+                    rowArray[j] = rowArray[j-1];
+                    rowArray[j-1] = 0;
+                    if( j == N-1 )
                         merged = false;
-                        break;
-                    }
+                } else if( rowArray[j] == rowArray[j-1] && !merged ) {
+                    rowArray[j] += 1;
+                    rowArray[j-1] = 0;
+                    //pushScore += pow(2, rowArray[j]);
+                    merged = true;
+                    break;
+                } else {
+                    merged = false;
+                    break;
                 }
             }
         }
-
-        unsigned int tmpRow = 0;
-        for( unsigned char i = 0; i < N; i++ ) {
-            tmpRow += rowArray[i]*powersOf16[i];
-        }
-        pushList.push_back(tmpRow);
-        scoreList.push_back(pushScore);
     }
-}
-
-std::array<unsigned int, N> game::columns(std::array<unsigned int, N> field) {
-    std::array<unsigned int, N> output;
-    for( unsigned char i = 0; i < N; i++ ) {
-        output[i] = 0;
-        for( unsigned char j = 0; j < N; j++ ) {
-            output[i] += ((field[j] >> 4*i) & 15 ) * powersOf16[j];
-        }
-    }
-    return output;
-}
-
-unsigned int game::reverseNumber(unsigned int number) {
-    unsigned int output = 0;
-    for( unsigned char i = 0; i < N; i++ ) {
-        output += (( number >> 4*i ) & 15 )*powersOf16[N-i-1];
-    }
-    return output;
-}
-
-bool game::moveRight() {
-    bool changed = false;
-    for( unsigned char i = 0; i < N; i++ ) {
-        if( field[i] != pushList[field[i]] ) {
-            changed = true;
-            score += scoreList[field[i]];
-            field[i] = pushList[field[i]];
-        }
-    }
-    return changed;
-}
-
-bool game::moveLeft() {
-    bool changed = false;
-    for( unsigned char i = 0; i < N; i++ ) {
-        if( field[i] != reverseNumber( pushList[reverseNumber(field[i]) ] ) ) {
-            changed = true;
-            score += scoreList[reverseNumber( field[i] )];
-            field[i] = reverseNumber( pushList[ reverseNumber( field[i] ) ] );
-        }
-    }
-    return changed;
-}
-
-bool game::moveUp() {
-    bool changed = false;
-    std::array<unsigned int, N> col = columns(field);
-    for( unsigned char i = 0; i < N; i++ ) {
-        if( col[i] != reverseNumber( pushList[reverseNumber( col[i])] ) ) {
-            changed = true;
-            score += scoreList[reverseNumber( col[i])];
-            col[i] = reverseNumber( pushList[reverseNumber( col[i])]);
-        }
-    }
-    field = columns(col);
-    return changed;
-}
-
-bool game::moveDown() {
-    bool changed = false;
-    std::array<unsigned int, N> col = columns(field);
-    for( unsigned char i = 0; i < N; i++ ) {
-        if( col[i] != pushList[col[i]] ) {
-            changed = true;
-            score += scoreList[col[i]];
-            col[i] = pushList[col[i]];
-        }
-    }
-    field = columns(col);
-    return changed;
-}
-
-bool game::move(unsigned char direction) {
-    if( direction == 0)
-        return moveUp();
-    if( direction == 1)
-        return moveLeft();
-    if( direction == 2)
-        return moveDown();
-    if( direction == 3)
-        return moveRight();
-    return false;
-}
-
-void game::fieldToInput(std::vector<double> &input){
-    //HACK: input will be reset to 0.0 in genome::evaluate
-    //std::fill(input.begin(), input.end(), 0.0);
-    for(unsigned char i = 0; i < N*N; i++){
-        input[getCell(i)*16 + i] = 1.0;
-    }
-}
-
-std::vector<double> game::fieldToFlatField(){
-    std::vector<double> input;
-    for(unsigned char j = 0; j < N; j++){
-        for(unsigned char k = 0; k < N; k++){
-            input.push_back(getCell(j,k));
-        }
-    }
-    return input;
-}
-
-std::vector<unsigned char> game::sortOutput(std::vector<double> output){
-    std::vector<unsigned char> indices(output.size());
-    std::iota(begin(indices), end(indices), static_cast<size_t>(0));
-
-    std::sort(
-        begin(indices), end(indices),
-        [&](size_t a, size_t b) { return output[a] > output[b]; }
-    );
-    return indices;
-}
-
-static double getMedian(std::vector<double> &input){
-    std::sort(input.begin(), input.end());
-    if(input.size() % 2){
-        return input[(input.size()-1)/2];
-    }
-    return (input[input.size()/2]+input[input.size()/2-1])/2.0;
-}
-
-static std::vector<double> getTileProbability(std::vector<double> &maxTile){
-    std::vector<double> result(16, 0);
-    for(auto const &tile : maxTile){
-        for(unsigned short i=0; i<=tile; i++){
-            result[i]+=1.0;
-        }
-    }
-    for(unsigned short i=0; i<result.size(); i++){
-        result[i] /= maxTile.size();
-    }
+    //printf("%d %d %d %d\n", rowArray[0], rowArray[1], rowArray[2], rowArray[3] );
+    row_t result = (rowArray[0]) + (rowArray[1] << exponentBits) + (rowArray[2] << 2*exponentBits) + (rowArray[3] << 3*exponentBits);
     return result;
 }
 
-static void writeGenerationScore(std::vector<double> &generationScore, pool &mainPool){
-    std::ofstream generationFile;
-    generationFile.open(mainPool.timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
-    double generationMean = 0.0;
+inline board_t game_t::moveRight(board_t board){
+    board_t newBoard = board;
+    newBoard ^= board_t(pushRowRight[(board >> 0) & 0xFFFFULL]) << 0;
+    newBoard ^= board_t(pushRowRight[(board >> 16) & 0xFFFFULL]) << 16;
+    newBoard ^= board_t(pushRowRight[(board >> 32) & 0xFFFFULL]) << 32;
+    newBoard ^= board_t(pushRowRight[(board >> 48) & 0xFFFFULL]) << 48;
+    return newBoard;
+}
 
-    for(auto const& x : generationScore){
-        generationMean += x;
+inline board_t game_t::moveLeft(board_t board){
+    board_t newBoard = board;
+    newBoard ^= board_t(pushRowLeft[(board >> 0) & 0xFFFFULL]) << 0;
+    newBoard ^= board_t(pushRowLeft[(board >> 16) & 0xFFFFULL]) << 16;
+    newBoard ^= board_t(pushRowLeft[(board >> 32) & 0xFFFFULL]) << 32;
+    newBoard ^= board_t(pushRowLeft[(board >> 48) & 0xFFFFULL]) << 48;
+    return newBoard;
+}
+
+inline board_t game_t::moveUp(board_t board){
+    board_t newBoard = board;
+    board_t transposed = transpose(board);
+    newBoard ^= pushColUp[(transposed >>  0) & 0xFFFFULL] <<  0;
+    newBoard ^= pushColUp[(transposed >> 16) & 0xFFFFULL] <<  4;
+    newBoard ^= pushColUp[(transposed >> 32) & 0xFFFFULL] <<  8;
+    newBoard ^= pushColUp[(transposed >> 48) & 0xFFFFULL] << 12;
+    return newBoard;
+}
+
+inline board_t game_t::moveDown(board_t board){
+    board_t newBoard = board;
+    board_t transposed = transpose(board);
+    newBoard ^= pushColDown[(transposed >>  0) & 0xFFFFULL] <<  0;
+    newBoard ^= pushColDown[(transposed >> 16) & 0xFFFFULL] <<  4;
+    newBoard ^= pushColDown[(transposed >> 32) & 0xFFFFULL] <<  8;
+    newBoard ^= pushColDown[(transposed >> 48) & 0xFFFFULL] << 12;
+    return newBoard;
+}
+
+inline board_t game_t::move(board_t board, move_t direction){
+    switch(direction){
+        case 0:
+            return moveUp(board);
+        case 1:
+            return moveLeft(board);
+        case 2:
+            return moveDown(board);
+        case 3:
+            return moveRight(board);
     }
-    generationMean = generationMean / generationScore.size();
-    generationFile << mainPool.generation - 1 << "  " << generationMean << std::endl;
-    generationScore.erase(generationScore.begin(), generationScore.end());
-
-    generationFile.close();
+    //this should never happen
+    return 0;
 }
 
-static void writeTileProbability(std::vector<double> &maxTileVector, pool &mainPool){
-    std::ofstream tileProbabilityFile;
-    tileProbabilityFile.open(mainPool.timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
-
-    std::vector<double> tileProbability = getTileProbability(maxTileVector);
-    tileProbabilityFile << mainPool.generation - 1 << " ";
-    for(auto const& prob: tileProbability)
-        tileProbabilityFile << prob << "    ";
-    tileProbabilityFile << std::endl;
-    maxTileVector.erase(maxTileVector.begin(), maxTileVector.end());
-
-    tileProbabilityFile.close();
-}
-
-static void writeMutationRates(pool &mainPool){
-    std::ofstream mutationRatesFile;
-    mutationRatesFile.open(mainPool.timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
-    std::vector<double> ratesMean(9, 0);
-    std::vector<double> ratesSecondMoment(9, 0);
-    for(auto const &spec : mainPool.speciesVector){
-        for(auto const &genom : spec->genomes){
-            ratesMean[0] += genom->mutationRates["weight"];
-            ratesMean[1] += genom->mutationRates["link"];
-            ratesMean[2] += genom->mutationRates["bias"];
-            ratesMean[3] += genom->mutationRates["node"];
-            ratesMean[4] += genom->mutationRates["enable"];
-            ratesMean[5] += genom->mutationRates["disable"];
-            ratesMean[6] += genom->mutationRates["transfer"];
-            ratesMean[7] += genom->mutationRates["delete"];
-            ratesMean[8] += genom->mutationRates["step"];
-
-            ratesSecondMoment[0] += pow(genom->mutationRates["weight"], 2);
-            ratesSecondMoment[1] += pow(genom->mutationRates["link"], 2);
-            ratesSecondMoment[2] += pow(genom->mutationRates["bias"], 2);
-            ratesSecondMoment[3] += pow(genom->mutationRates["node"], 2);
-            ratesSecondMoment[4] += pow(genom->mutationRates["enable"], 2);
-            ratesSecondMoment[5] += pow(genom->mutationRates["disable"], 2);
-            ratesSecondMoment[6] += pow(genom->mutationRates["transfer"], 2);
-            ratesSecondMoment[7] += pow(genom->mutationRates["delete"], 2);
-            ratesSecondMoment[8] += pow(genom->mutationRates["step"], 2);
-        }
+void game_t::getInput(board_t board, std::vector<double> &input){
+    //input will be reset in genome::evaluate
+    for(index_t index = 0; index < N*N; ++index){
+        input[getCell(board, index)*16 + index] = 1.0;
     }
-
-    mutationRatesFile << mainPool.generation << " ";
-    for(unsigned char i=0; i<ratesMean.size(); i++)
-        mutationRatesFile << ratesMean[i] / mainPool.population << "    " << sqrt(ratesSecondMoment[i] / mainPool.population - pow(ratesMean[i] / mainPool.population, 2)) << "    ";
-    mutationRatesFile << std::endl;
-
-    mutationRatesFile.close();
 }
 
-static void writeStats(pool &mainPool){
-    std::ofstream statsFile;
-    statsFile.open(mainPool.timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
-
-    unsigned int neurons = 0, activeNeurons = 0, mutableNeurons = 0;
-    unsigned int genes = 0, enabledGenes = 0, disabledGenes = 0;
-
-    for(auto const& spec : mainPool.speciesVector){
-        for(auto const& genom : spec->genomes){
-            genes += genom->genes.size();
-            for(auto const& gen : genom->genes){
-                if(gen->enabled)
-                    enabledGenes++;
-                else
-                    disabledGenes++;
-            }
-            neurons += genom->neurons.size();
-            mutableNeurons += genom->neurons.size() - mainPool.inputs;
-            for(auto const& neur : genom->neurons){
-                if(neur->activated)
-                    activeNeurons++;
-            }
-        }
-    }
-
-    statsFile << mainPool.generation << "   " << neurons*1.0/mainPool.population << "   " << activeNeurons*1.0/mainPool.population << " " << mutableNeurons*1.0/mainPool.population << "    "
-              << genes*1.0/mainPool.population << " " << enabledGenes*1.0/mainPool.population << "  " << disabledGenes*1.0/mainPool.population << " " << mainPool.speciesVector.size() << " "
-              << mainPool.stdev << "    " << mainPool.targetPrecision << std::endl;
-
-    statsFile.close();
+std::vector<move_t> game_t::sortOutput(std::vector<double> &output){
+    std::vector<index_t> indices(output.size());
+    std::iota(indices.begin(), indices.end(), static_cast<size_t>(0));
+    std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b){return output[a] > output[b];});
+    return indices;
 }
 
-static double getMaxScore(std::vector<double> &flatField){
-       double score = 0.0;
-       for(auto const& cell : flatField){
-               if(cell < 2)
-                       continue;
-               score += (cell-1)*pow(2, cell);
-       }
-       return score;
-}
-
-
-void game::autoSolve() {
-    unsigned short generations = 150;
-    std::array<unsigned int, N> oldField = field;
-    unsigned int oldScore = score;
-
-    pool mainPool(N*N*16, 4, POPULATION);
+void game_t::play(genome* genom){
     std::vector<double> input(N*N*16, 0.0);
-    std::ofstream scoreFile;
-    scoreFile.open(mainPool.timestamp + ".dat", std::ofstream::out | std::ofstream::app);
-    std::vector<double> maxTileVector;
-    std::vector<double> generationScore;
-
-    while(true){
-        genome* currentGenome = mainPool.speciesVector[mainPool.currentSpecies]->genomes[mainPool.currentGenome];
-        if(/*currentGenome->calculateScore*/ true){
-        	double diff = 1.0;
-        	double lastFitness = currentGenome->fitness;
-        	while(currentGenome->precision > mainPool.targetPrecision){
-        		double meanScore = 0.0;
-		        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
-		            field = oldField;
-		            score = oldScore;
-		            while(true){
-		                fieldToInput(input);
-		                std::vector<double> output = currentGenome->evaluate(input);
-		                std::vector<unsigned char> sorted = sortOutput(output);
-		                for(auto const& x : sorted){
-		                    bool legalmove = move(x);
-		                    if(legalmove)
-		                        break;
-		                }
-		                if(!spawnNumber())
-		                    break;
-		            }
-		            std::vector<double> flatField = fieldToFlatField();
-		            //meanScore += getMaxScore(flatField);//getMaxTile();
-		            currentGenome->scores.push_back(getMaxScore(flatField));
-		            scoreFile << score << std::endl;
-		            maxTileVector.push_back(getMaxTile());
-		        }
-		        currentGenome->calculateFitness();
-	    	}
-	    	currentGenome->calculateScore = false;
-	    }
-	    //this is biased...but not by much i hope
-	    generationScore.push_back(currentGenome->fitness);
-        mainPool.nextGenome();
-
-        if(mainPool.firstOfGeneration){
-            writeGenerationScore(generationScore, mainPool);
-            writeTileProbability(maxTileVector, mainPool);
-            writeMutationRates(mainPool);
-            writeStats(mainPool);
+    std::vector<double> output(4);
+    std::vector<move_t> sorted(4);
+    bool legalmove;
+    while(genom->precision > genom->poolPointer->targetPrecision){
+        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
+            board_t board = initBoard();
+            while(true){
+                getInput(board, input);
+                genom->evaluate(input, output);
+                std::iota(sorted.begin(), sorted.end(), static_cast<size_t>(0));
+                std::sort(sorted.begin(), sorted.end(), [&](size_t a, size_t b){return output[a] > output[b];});
+                legalmove = false;
+                for(auto const& x : sorted){
+                    board_t newBoard = move(board, x);
+                    if(newBoard != board){
+                        legalmove = true;
+                        board = newBoard;
+                        spawnTile(board);
+                        break;
+                    }
+                }
+                if(!legalmove)
+                    break;
+            }
+            genom->scores.push_back(getScore(board));
         }
+        genom->calculateFitness();
+    }
+    printf("Runs: %lu Score: %f Precision: %f\n", genom->scores.size(), genom->fitness, genom->precision);
+}
+
+void game_t::learn(){
+    pool mainPool(N*N*16, 4, POPULATION);
+    while(true){
+        std::vector<genome*> allGenomes;
+        allGenomes.reserve(POPULATION);
+        for(auto const& spec : mainPool.speciesVector)
+            for(auto const& genom : spec->genomes)
+                allGenomes.push_back(genom);
+        #pragma omp parallel for
+        for(unsigned int i = 0; i < allGenomes.size(); ++i)
+            play(allGenomes[i]);
+        mainPool.newGeneration();
     }
 }

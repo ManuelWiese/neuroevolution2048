@@ -1,52 +1,57 @@
-#ifndef GAME_H
-#define GAME_H
-
-#include <iostream>
-#include <array>
+#include <cstdint>
 #include <vector>
-#include <cmath>
+#include <array>
 #include <random>
+#include <algorithm>
+#include "pool.h"
 
-extern std::mt19937 gen;
-extern std::uniform_real_distribution<> dis;
+typedef uint64_t board_t;
+typedef uint16_t row_t;
+typedef uint8_t index_t;
+typedef uint8_t value_t;
+typedef uint8_t move_t;
+typedef uint16_t score_t;
 
-const unsigned char N = 4;
+const uint8_t N = 4;
+const uint8_t exponentBits = 4;
 
-class game {
+extern std::mt19937 generator;
+extern std::uniform_real_distribution<> distribution;
+extern std::uniform_int_distribution<> intDistribution;
+
+class game_t{
 public:
-    std::array<unsigned int, N> field;
-    unsigned char emptyCells;
-    unsigned int score;
+    std::array<row_t, 65536> pushRowRight;
+    std::array<row_t, 65536> pushRowLeft;
+    std::array<board_t, 65536> pushColUp;
+    std::array<board_t, 65536> pushColDown;
 
-    std::vector<unsigned int> pushList;
-    std::vector<unsigned int> scoreList;
-    std::vector<unsigned int> emptyList;
-    std::vector<int> monotonousList;
-    std::array<unsigned int, N+1> powersOf16;
+                    game_t();
+    board_t         initBoard();
+    void            print(board_t board);
+    void            setCell(board_t &board, index_t index, value_t value);
+    void            setCell(board_t &board, index_t i, index_t j, value_t value);
+    value_t         getCell(board_t board, index_t index);
+    value_t         getCell(board_t board, index_t i, index_t j);
+    void            spawnTile(board_t &board);
+    score_t         getScore(board_t board);
+    value_t 		getMaxTile(board_t board);
 
-    game();
-    void print(bool printField);
-    unsigned char getCell(unsigned char i, unsigned char j);
-    unsigned char getCell(unsigned char index);
-    void setCell(unsigned char i, unsigned char j, unsigned char value);
-    void setCell(unsigned char index, unsigned char value);
-    unsigned char getMaxTile();
-    std::vector<unsigned char> getHistogram();
-    bool moveUp();
-    bool moveLeft();
-    bool moveDown();
-    bool moveRight();
-    bool move(unsigned char direction);
-    void fieldToInput(std::vector<double> &input);
-    std::vector<double> fieldToFlatField();
-    std::vector<unsigned char> sortOutput(std::vector<double> output);
-    void autoSolve();
+    board_t         transpose(board_t board);
+    row_t           reverseRow(row_t row);
+    board_t         rowToColumn(row_t row);
+    row_t           pushRow(row_t row);
 
-    void fillPushList();
-    std::array<unsigned int, N> columns(std::array<unsigned int, N> field);
-    unsigned int reverseNumber(unsigned int number);
-    bool spawnNumber();
+    board_t         moveRight(board_t board);
+    board_t         moveLeft(board_t board);
+    board_t         moveUp(board_t board);
+    board_t         moveDown(board_t board);
+    board_t			move(board_t board, move_t direction);
+
+    void					getInput(board_t board, std::vector<double> &input);
+    std::vector<move_t>		sortOutput(std::vector<double> &output);
+
+    void	        play(genome* genom);
+    void 			learn();
 
 };
-
-#endif // GAME_H

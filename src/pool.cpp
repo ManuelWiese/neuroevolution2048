@@ -4,6 +4,7 @@
 #include <limits>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     char buffer[256];
@@ -204,43 +205,18 @@ void pool::setMaxFitness(){
     }
 }
 
-void pool::newGeneration(){
-    setMaxFitness();
-    cullSpecies(false);
-    removeStaleSpecies();
-    rankGenomes();
-
+void pool::writeStats(){
+    double mean = 0;
     for(auto const& spec : speciesVector)
-        spec->calculateAverageFitness();
-
-    //removeWeakSpecies();
-    double avgFitness = getAverageFitness();
-
-    std::vector<genome*> children;
-    for(auto const& spec : speciesVector){
-        short breed = floor(spec->averageFitness/avgFitness) - std::min((int)spec->genomes.size(), CULL_MINIMUM);
-        printf("breed: %d\n", breed);
-        for( unsigned short i = 0; i < breed; i++){
-            children.push_back(spec->breedChild());
-        }
-    }
-
-    cullSpecies(true);
-    unsigned short remaining = 0;
-    for(auto const& spec : speciesVector){
-        remaining += spec->genomes.size();
-    }
-    printf("children.size() = %ld\n", children.size());
-    printf("remaining after cull: %d\n", remaining);
-    printf("speciesVector.size() = %ld\n", speciesVector.size());
-    while(children.size() + remaining < population)
-        children.push_back(speciesVector[(int)(dis(gen)*speciesVector.size())]->breedChild());
-
-    for(auto const& child : children)
-        addToSpecies(child);
-
-    generation += 1;
+        for(auto const& genom : spec->genomes)
+            mean += genom->fitness;
+    mean /= population;
+    std::ofstream generationFile;
+    generationFile.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
+    generationFile << generation << "  " << mean << std::endl;
+    generationFile.close();
 }
+
 void pool::setPrecision(){
     double mean, min = std::numeric_limits<double>::max(), max = 0.0;
     std::vector<double> boundary;
@@ -283,9 +259,49 @@ void pool::setPrecision(){
     printf("newPrecision: %f\n", targetPrecision);
 }
 
+void pool::newGeneration(){
+    setMaxFitness();
+    writeStats();
+    setPrecision();
+    cullSpecies(false);
+    removeStaleSpecies();
+    rankGenomes();
+
+    for(auto const& spec : speciesVector)
+        spec->calculateAverageFitness();
+
+    //removeWeakSpecies();
+    double avgFitness = getAverageFitness();
+
+    std::vector<genome*> children;
+    for(auto const& spec : speciesVector){
+        short breed = floor(spec->averageFitness/avgFitness) - std::min((int)spec->genomes.size(), CULL_MINIMUM);
+        printf("breed: %d\n", breed);
+        for( unsigned short i = 0; i < breed; i++){
+            children.push_back(spec->breedChild());
+        }
+    }
+
+    cullSpecies(true);
+    unsigned short remaining = 0;
+    for(auto const& spec : speciesVector){
+        remaining += spec->genomes.size();
+    }
+    printf("children.size() = %ld\n", children.size());
+    printf("remaining after cull: %d\n", remaining);
+    printf("speciesVector.size() = %ld\n", speciesVector.size());
+    while(children.size() + remaining < population)
+        children.push_back(speciesVector[(int)(distribution(generator)*speciesVector.size())]->breedChild());
+
+    for(auto const& child : children)
+        addToSpecies(child);
+
+    generation += 1;
+}
+
 void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
-    printf("%d  %d  %d  %f  %f  %d  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, currentGenomes[currentGenome]->precision, currentGenomes[currentGenome]->scores.size(), maxFitness);
+    printf("%d  %d  %d  %f  %f  %lu  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, currentGenomes[currentGenome]->precision, currentGenomes[currentGenome]->scores.size(), maxFitness);
     currentGenome += 1;
     firstOfGeneration = false;
     if(currentGenome >= currentGenomes.size()){
@@ -294,7 +310,6 @@ void pool::nextGenome(){
         if(currentSpecies >= speciesVector.size()){
             currentSpecies = 0;
             //TODO: insert save here
-            setPrecision();
             newGeneration();
             firstOfGeneration = true;
         }

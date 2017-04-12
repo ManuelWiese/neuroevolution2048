@@ -31,6 +31,7 @@ public:
     void                removeWeakSpecies();
     void                addToSpecies(genome* child);
     void                setMaxFitness();
+    void                writeStats();
     void                newGeneration();
     void                setPrecision();
     void                nextGenome();

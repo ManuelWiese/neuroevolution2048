@@ -17,12 +17,12 @@ void species::calculateAverageFitness(){
 
 genome* species::breedChild(){
     genome *child;
-    if( dis(gen) < CROSSOVER_CHANCE) {
-        child = genome::crossover(genomes[(int)(genomes.size() * dis(gen))],
-                                  genomes[(int)(genomes.size() * dis(gen))]
+    if( distribution(generator) < CROSSOVER_CHANCE) {
+        child = genome::crossover(genomes[(int)(genomes.size() * distribution(generator))],
+                                  genomes[(int)(genomes.size() * distribution(generator))]
                                  );
     } else
-        child = new genome(*genomes[(int)(genomes.size() * dis(gen))]);
+        child = new genome(*genomes[(int)(genomes.size() * distribution(generator))]);
     child->mutate();
     return child;
 }

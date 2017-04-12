@@ -7,8 +7,8 @@
 #include <random>
 #include <cmath>
 
-extern std::mt19937 gen;
-extern std::uniform_real_distribution<> dis;
+extern std::mt19937 generator;
+extern std::uniform_real_distribution<> distribution;
 
 class species{
 public:

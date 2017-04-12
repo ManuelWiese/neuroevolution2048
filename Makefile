@@ -4,17 +4,17 @@ BIN_NAME := neuronal2048
 
 CPP_FILES := $(wildcard $(SOURCE_FOLDER)*.cpp)
 OBJ_FILES := $(addprefix $(OBJECTS_FOLDER),$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS :=
+LD_FLAGS := -fopenmp
 
 ifndef CXX
 CXX := g++
 endif
 
-CC_FLAGS := -std=c++0x -O3
+CC_FLAGS := -std=c++0x -O3 -fopenmp
 
 all: main
 
-debug: CC_FLAGS := -std=c++0x -O0 -g
+debug: CC_FLAGS := -std=c++0x -O0 -g -fopenmp
 debug: main
 
 main: $(OBJ_FILES)

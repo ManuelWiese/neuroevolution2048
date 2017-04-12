@@ -11,8 +11,8 @@
 #include "gene.h"
 #include "config.h"
 
-extern std::mt19937 gen;
-extern std::uniform_real_distribution<> dis;
+extern std::mt19937 generator;
+extern std::uniform_real_distribution<> distribution;
 
 //forward declaration of pool
 class pool;
@@ -46,7 +46,7 @@ public:
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
-    std::vector<double> evaluate(std::vector<double> &inputs);
+    void                evaluate(std::vector<double> &inputs, std::vector<double> &output);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);

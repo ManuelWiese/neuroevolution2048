@@ -28,7 +28,7 @@
 
 #define STEPSIZE  0.1
 
-#define PRECISION 0.1
+#define PRECISION 0.01
 
 #define NAME_PREFIX	"entropy"
 #define SAVEPATH  "./save/"
