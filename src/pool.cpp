@@ -258,15 +258,15 @@ void pool::writeStats(){
     }
     fileHandle.open(timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "    "
-               << meanMutationRates["weight"] << "    "
-               << meanMutationRates["link"] << "    "
-               << meanMutationRates["bias"] << "    "
-               << meanMutationRates["node"] << "    "
-               << meanMutationRates["enable"] << "    "
-               << meanMutationRates["disable"] << "    "
-               << meanMutationRates["transfer"] << "    "
-               << meanMutationRates["delete"] << "    "
-               << meanMutationRates["step"] << "    ";
+               << meanMutationRates["weight"]/population << "    "
+               << meanMutationRates["link"]/population << "    "
+               << meanMutationRates["bias"]/population << "    "
+               << meanMutationRates["node"]/population << "    "
+               << meanMutationRates["enable"]/population<< "    "
+               << meanMutationRates["disable"]/population << "    "
+               << meanMutationRates["transfer"]/population << "    "
+               << meanMutationRates["delete"]/population << "    "
+               << meanMutationRates["step"]/population << "    ";
     
     fileHandle << std::endl;
     fileHandle.close();
@@ -305,7 +305,7 @@ void pool::writeStats(){
     fileHandle.close();
 }
 
-void pool::setPrecision(){
+bool pool::setPrecision(){
     double mean, min = std::numeric_limits<double>::max(), max = 0.0;
     std::vector<double> boundary;
     std::vector<double> fitness;
@@ -340,17 +340,27 @@ void pool::setPrecision(){
             entropy -= freq[i] * log(freq[i] * 1.0 / population) / population;
     }
     printf("entropy: %f\n", entropy);
-    if(entropy > log(population/CULL_MINIMUM))
+    if(entropy > log(population/CULL_MINIMUM)){
         targetPrecision *= 1.25;
-    else
+        printf("newPrecision: %f\n", targetPrecision);
+        return false;
+    }
+    else{
+        //first run is to activate the input neurons 
+        if(generation < 1)
+            return false;
         targetPrecision /= 1.25;
-    printf("newPrecision: %f\n", targetPrecision);
+        printf("rerun with precision: %f\n", targetPrecision);
+        return true;
+    }
+    
 }
 
 void pool::newGeneration(){
+    if(setPrecision())
+        return;
     setMaxFitness();
     writeStats();
-    setPrecision();
     cullSpecies(false);
     removeStaleSpecies();
     rankGenomes();

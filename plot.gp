@@ -86,8 +86,9 @@ set term GPVAL_TERM 3
 #scoreFile using (bin($1,binwidth)):(($0 < 100*1500 && $0 >= 99*1500)? 1.0 : 0.0) smooth freq with boxes
 
 set term GPVAL_TERM 4
-
+stats statsFile u 8 name 'species' nooutput;
 set ylabel "species"
+set yrange [species_min-1:species_max+1]
 plot statsFile using 1:8 w l ls 11
 
 set term GPVAL_TERM 5
@@ -96,6 +97,7 @@ set ytics nomirror
 set y2tics
 set y2label "genes"
 set ylabel "neurons"
+set yrange [*:*]
 
 plot statsFile using 1:2 title "total neurons" w l ls 11,\
 statsFile using 1:3 title "active neurons" w l ls 12,\

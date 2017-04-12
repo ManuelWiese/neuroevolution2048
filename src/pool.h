@@ -33,7 +33,7 @@ public:
     void                setMaxFitness();
     void                writeStats();
     void                newGeneration();
-    void                setPrecision();
+    bool                setPrecision();
     void                nextGenome();
 };
 
