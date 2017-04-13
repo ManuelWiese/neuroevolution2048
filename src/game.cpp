@@ -245,8 +245,8 @@ void game_t::play(genome* genom){
         for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
             board_t board = initBoard();
             while(true){
-                getInput(board, input);
-                genom->evaluate(input, output);
+                //getInput(board, input);
+                genom->evaluate(board, getMaxTile(board), output);
                 std::iota(sorted.begin(), sorted.end(), static_cast<size_t>(0));
                 std::sort(sorted.begin(), sorted.end(), [&](size_t a, size_t b){return output[a] > output[b];});
                 legalmove = false;

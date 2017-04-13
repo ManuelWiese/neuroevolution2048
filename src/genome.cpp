@@ -34,6 +34,7 @@ genome::genome(pool *poolPtr, bool createNeurons = true){
     precision = 1.0;
     targetPrecision = PRECISION;
     calculateScore = true;
+    maxTileSeen = 0;
 }
 
 genome::genome(genome &copyGenome) {
@@ -73,6 +74,7 @@ genome::genome(genome &copyGenome) {
     precision = 1.0;
     targetPrecision = PRECISION;
     calculateScore = true;
+    maxTileSeen = copyGenome.maxTileSeen;
 }
 
 genome* genome::basicGenome(pool *poolPtr){
@@ -87,7 +89,9 @@ genome* genome::crossover(genome* genome1, genome* genome2){
         genome1 = genome2;
         genome2 = tmpGenome;
     }
+
     genome *child = new genome(genome1->poolPointer, false);
+    child->maxTileSeen = std::max(genome1->maxTileSeen, genome2->maxTileSeen);
 
     for( auto const& x : genome1->neurons){
         neuron* neuronPointer = new neuron();
@@ -254,19 +258,21 @@ double genome::calculateNeuron(unsigned short neuronNumber){
     return tmp->value;
 }
 
-void genome::evaluate(std::vector<double> &inputs, std::vector<double> &output){
+void genome::evaluate(uint64_t board, unsigned char maxTile, std::vector<double> &output){
     for(std::vector<neuron*>::iterator it = neurons.begin()+poolPointer->inputs; it != neurons.end(); ++it)
         (*it)->calculated = false;
 
-    for(unsigned short i = 0; i < poolPointer->inputs; ++i){
+    if(maxTileSeen < maxTile)
+        maxTileSeen = maxTile;
+
+    for(unsigned short i = 0; i < 16*(maxTileSeen+1); ++i){
         neuron *neuronPointer = neurons[i];
-        neuronPointer->value = inputs[i];
-        //Input neurons are never set to false
-        //neuronPointer->calculated = true;
-        if( neuronPointer->value ){
-            inputs[i] = 0.0;
+
+        if(((board >> 4*(i%16)) & 0x000FULL) == i/16){
+            neuronPointer->value = 1.0;
             neuronPointer->activated = true;
-        }
+        } else
+            neuronPointer->value = 0.0;
     }
 
     for(unsigned short i = 0; i < poolPointer->outputs; ++i){

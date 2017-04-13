@@ -7,6 +7,7 @@
 #include <random>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include "neuron.h"
 #include "gene.h"
 #include "config.h"
@@ -33,6 +34,8 @@ public:
     double                              targetPrecision;
     bool                                calculateScore;
 
+    unsigned char                       maxTileSeen;
+
 
                         genome(pool *poolPtr, bool createNeurons);
                         genome(genome &copyGenome);
@@ -47,7 +50,7 @@ public:
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
-    void                evaluate(std::vector<double> &inputs, std::vector<double> &output);
+    void                evaluate(uint64_t board, unsigned char maxTile, std::vector<double> &output);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);
