@@ -272,7 +272,9 @@ void game_t::play(genome* genom){
 
 void game_t::learn(){
     pool mainPool(N*N*16, 4, POPULATION);
-    while(true){
+    unsigned int counter = 0;
+    while(counter < 5){
+        counter++;
         std::vector<genome*> allGenomes;
         allGenomes.reserve(POPULATION);
         for(auto const& spec : mainPool.speciesVector)

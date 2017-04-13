@@ -3,6 +3,7 @@
 
 #include "gene.h"
 #include <vector>
+#include <array>
 
 
 class neuron{
@@ -22,6 +23,7 @@ public:
 
     double              (*transfer)(double);
 
+    static std::array<double, 201> sigmoidArray;
     static double       sigmoid(double x);
     static double       step(double x);
     static double       slope(double x);
