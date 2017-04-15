@@ -1,4 +1,5 @@
 #include "game.h"
+#include <omp.h>
 
 game_t::game_t(){
     for(unsigned int row = 0; row < 65536; ++row){
@@ -54,9 +55,9 @@ inline void game_t::spawnTile(board_t &board){
     if(!empty.size())
         return;
 
-    value_t spawn = distribution(generator) > 0.9 ? 2 : 1;
+    value_t spawn = rng[omp_get_thread_num()].randn4(9) == 9 ? 2 : 1;
     if(empty.size() != 1){
-    	index_t pick = (index_t)(distribution(generator) * empty.size());
+    	index_t pick = rng[omp_get_thread_num()].randn4(empty.size()-1);
     	board |= ((board_t)spawn << exponentBits * empty[pick]);
 	} else {
 		board |= ((board_t)spawn << exponentBits * empty[0]);
@@ -262,7 +263,7 @@ void game_t::play(genome* genom){
                 if(!legalmove)
                     break;
             }
-            genom->scores.push_back(getScore(board));
+            genom->scores.push_back(std::log2(getScore(board)));
             genom->maxTile.push_back(getMaxTile(board));
         }
         genom->calculateFitness();
@@ -272,9 +273,7 @@ void game_t::play(genome* genom){
 
 void game_t::learn(){
     pool mainPool(N*N*16, 4, POPULATION);
-    unsigned int counter = 0;
-    while(counter < 5){
-        counter++;
+    while(true){
         std::vector<genome*> allGenomes;
         allGenomes.reserve(POPULATION);
         for(auto const& spec : mainPool.speciesVector)

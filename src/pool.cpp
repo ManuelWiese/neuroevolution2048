@@ -218,7 +218,7 @@ void pool::writeStats(){
     mean /= population;
     std::ofstream fileHandle;
     fileHandle.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    " 
+    fileHandle << generation << "    "
                << mean << "    "
                << targetPrecision << "    "
                << min << "    "
@@ -267,7 +267,7 @@ void pool::writeStats(){
                << meanMutationRates["transfer"]/population << "    "
                << meanMutationRates["delete"]/population << "    "
                << meanMutationRates["step"]/population << "    ";
-    
+
     fileHandle << std::endl;
     fileHandle.close();
 
@@ -289,7 +289,7 @@ void pool::writeStats(){
                 if(neur->activated)
                     activeNeurons++;
             }
-        } 
+        }
     }
 
     fileHandle.open(timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
@@ -346,14 +346,14 @@ bool pool::setPrecision(){
         return false;
     }
     else{
-        //first run is to activate the input neurons 
+        //first run is to activate the input neurons
         if(generation < 1)
             return false;
         targetPrecision /= 1.25;
         printf("rerun with precision: %f\n", targetPrecision);
         return true;
     }
-    
+
 }
 
 void pool::newGeneration(){

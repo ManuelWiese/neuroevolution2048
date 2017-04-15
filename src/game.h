@@ -4,6 +4,7 @@
 #include <random>
 #include <algorithm>
 #include "pool.h"
+#include "random_t.h"
 
 typedef uint64_t board_t;
 typedef uint16_t row_t;
@@ -18,6 +19,8 @@ const uint8_t exponentBits = 4;
 extern std::mt19937 generator;
 extern std::uniform_real_distribution<> distribution;
 extern std::uniform_int_distribution<> intDistribution;
+
+extern std::vector<random_t> rng;
 
 class game_t{
 public:

@@ -30,5 +30,5 @@
 
 #define PRECISION 0.01
 
-#define NAME_PREFIX	"openmp"
+#define NAME_PREFIX	"openmpLog"
 #define SAVEPATH  "./save/"

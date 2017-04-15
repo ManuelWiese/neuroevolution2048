@@ -113,7 +113,7 @@ genome* genome::crossover(genome* genome1, genome* genome2){
         auto search = innovations.find(gene1->innovation);
         if( search != innovations.end()){
             gene* gene2 = innovations[gene1->innovation];
-            if(gene2->enabled && distribution(generator) > 0.5)
+            if(gene2->enabled && rng[0].rand() > 0.5)
                 copyGene = new gene(*gene2);
             else
                 copyGene = new gene(*gene1);
@@ -296,7 +296,7 @@ unsigned short genome::randomNeuron(bool includeInput){
                 possible.push_back(i);
     }
     if(possible.size() > 0){
-        unsigned short pick = (int)(distribution(generator) * possible.size());
+        unsigned short pick = (int)(rng[0].rand() * possible.size());
         return possible[pick];
     }
     //HACK: in first generation, linkMutate will try 0->0 every time...
@@ -385,7 +385,7 @@ void genome::mutate(){
     printf("Innovation: %d\n", poolPointer->innovation);*/
 
     for(auto const& mutation : mutationRates){
-        if(distribution(generator)> 0.5)
+        if(rng[0].rand()> 0.5)
             mutationRates[mutation.first] *= 0.95;
         else
             mutationRates[mutation.first] /= 0.95;
@@ -412,7 +412,7 @@ void genome::mutate(){
             p *= disabledGenes;*/
 
         while(p > 0){
-            if(distribution(generator) < p){
+            if(rng[0].rand() < p){
                 if(!mutation.first.compare("weight"))
                     weightMutate();
                 else if(!mutation.first.compare("link"))
@@ -438,13 +438,13 @@ void genome::mutate(){
 void genome::weightMutate(){
     if(!genes.size())
         return;
-    gene* pick = genes[(int)(distribution(generator)*genes.size())];
+    gene* pick = genes[(int)(rng[0].rand()*genes.size())];
     if(!pick->enabled)
         return;
-    if(distribution(generator) < PERTUBCHANCE)
-        pick->weight += (distribution(generator) - 0.5) * mutationRates["step"];
+    if(rng[0].rand() < PERTUBCHANCE)
+        pick->weight += (rng[0].rand() - 0.5) * mutationRates["step"];
     else
-        pick->weight = (distribution(generator) - 0.5) * WEIGHT_RANGE;
+        pick->weight = (rng[0].rand() - 0.5) * WEIGHT_RANGE;
 }
 
 void genome::linkMutate(){
@@ -471,17 +471,17 @@ void genome::linkMutate(){
     }
 
     newGene->innovation = poolPointer->newInnovation();
-    newGene->weight = (distribution(generator) - 0.5)*WEIGHT_RANGE;
+    newGene->weight = (rng[0].rand() - 0.5)*WEIGHT_RANGE;
     genes.push_back(newGene);
     neurons[neuron2]->addIncoming(newGene);
 }
 
 void genome::biasMutate(){
     unsigned short pick = randomNeuron(false);
-    if(distribution(generator) < PERTUBCHANCE){
-        neurons[pick]->bias += (distribution(generator) - 0.5) * mutationRates["step"];
+    if(rng[0].rand() < PERTUBCHANCE){
+        neurons[pick]->bias += (rng[0].rand() - 0.5) * mutationRates["step"];
     } else {
-        neurons[pick]->bias = (distribution(generator) - 0.5) * BIAS_RANGE;
+        neurons[pick]->bias = (rng[0].rand() - 0.5) * BIAS_RANGE;
     }
 }
 
@@ -489,7 +489,7 @@ void genome::nodeMutate(){
     if(!genes.size())
         return;
 
-    unsigned short randomIndex = (int)(distribution(generator)*genes.size());
+    unsigned short randomIndex = (int)(rng[0].rand()*genes.size());
     if(!genes[randomIndex]->enabled)
         return;
 
@@ -529,7 +529,7 @@ void genome::enableToDisableMutate(){
     if(!candidates.size())
         return;
 
-    gene* pick = candidates[(int)(distribution(generator)*candidates.size())];
+    gene* pick = candidates[(int)(rng[0].rand()*candidates.size())];
     pick->enabled = false;
     neurons[pick->out]->disableIncoming(pick);
 }
@@ -544,14 +544,14 @@ void genome::disableToEnableMutate(){
     if(!candidates.size())
         return;
 
-    gene* pick = candidates[(int)(distribution(generator)*candidates.size())];
+    gene* pick = candidates[(int)(rng[0].rand()*candidates.size())];
     pick->enabled = true;
     neurons[pick->out]->enableIncoming(pick);
 }
 
 void genome::transferMutate(){
     unsigned short randomIndex = randomNeuron(false);
-    double pick = distribution(generator);
+    double pick = rng[0].rand();
     if(pick < 0.25)
         neurons[randomIndex]->transfer = &neuron::sigmoid;
     else if(pick < 0.5)
@@ -572,7 +572,7 @@ void genome::deleteDisabledMutate(){
     if(!candidates.size())
         return;
 
-    gene* pick = candidates[(int)(distribution(generator)*candidates.size())];
+    gene* pick = candidates[(int)(rng[0].rand()*candidates.size())];
     std::vector<gene*>::iterator it = find (genes.begin(), genes.end(), pick);;
     if (it != genes.end()) {
         genes.erase(it);

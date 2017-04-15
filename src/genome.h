@@ -10,10 +10,13 @@
 #include <cstdint>
 #include "neuron.h"
 #include "gene.h"
+#include "random_t.h"
 #include "config.h"
 
 extern std::mt19937 generator;
 extern std::uniform_real_distribution<> distribution;
+
+extern std::vector<random_t> rng;
 
 //forward declaration of pool
 class pool;

@@ -3,12 +3,15 @@
 
 #include <vector>
 #include "genome.h"
+#include "random_t.h"
 #include <limits>
 #include <random>
 #include <cmath>
 
 extern std::mt19937 generator;
 extern std::uniform_real_distribution<> distribution;
+
+extern std::vector<random_t> rng;
 
 class species{
 public:
