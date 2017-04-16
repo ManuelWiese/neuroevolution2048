@@ -286,7 +286,7 @@ void pool::writeStats(){
     fileHandle.close();
 
     //write network statistics mean count of: neurons, active neurons, mutable neurons, genes, enabled genes, disabled genes, deleted genes?
-    unsigned int neurons = 0, activeNeurons = 0, mutableNeurons = 0;
+    unsigned int neurons = 0, activeInputNeurons = 0, mutableNeurons = 0;
     unsigned int genes = 0, disabledGenes = 0, enabledGenes = 0;
     for(auto const& spec : speciesVector){
         for(auto const& genom : spec->genomes){
@@ -299,9 +299,9 @@ void pool::writeStats(){
             }
             neurons += genom->neurons.size();
             mutableNeurons += genom->neurons.size() - inputs;
-            for(auto const& neur : genom->neurons){
-                if(neur->activated)
-                    activeNeurons++;
+            for(auto const& neur : genom->inputActivated){
+                if(neur)
+                    activeInputNeurons++;
             }
         }
     }
@@ -309,7 +309,7 @@ void pool::writeStats(){
     fileHandle.open(timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "    "
                << neurons/population << "    "
-               << activeNeurons/population << "    "
+               << activeInputNeurons/population << "    "
                << mutableNeurons/population << "    "
                << genes/population << "    "
                << enabledGenes/population << "    "
@@ -320,7 +320,7 @@ void pool::writeStats(){
 }
 
 bool pool::setPrecision(){
-    double mean, min = std::numeric_limits<double>::max(), max = 0.0;
+    double mean = 0.0, min = std::numeric_limits<double>::max(), max = 0.0;
     std::vector<double> boundary;
     std::vector<double> fitness;
     for(auto const& spec : speciesVector){
@@ -363,7 +363,7 @@ bool pool::setPrecision(){
         //first run is to activate the input neurons
         if(generation < 1)
             return false;
-        targetPrecision /= 1.25;
+        targetPrecision /= 1.1;
         printf("rerun with precision: %f\n", targetPrecision);
         return true;
     }

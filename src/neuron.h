@@ -14,8 +14,7 @@ public:
     short               depth;
     double              bias;
     bool                calculated;
-    bool                activated;
-    
+
     bool                checkedConnection;
     bool                connected;
 

@@ -20,21 +20,28 @@ genome::genome(pool *poolPtr, bool createNeurons = true){
 
     poolPointer = poolPtr;
     if(createNeurons){
+        inputValue = std::vector<double*>(poolPointer->inputs);
         for( unsigned int i = 0; i < poolPointer->inputs; i++){
             neurons.push_back(new neuron());
             neurons[i]->calculated = true;
+            inputValue[i] = &(neurons[i]->value);
         }
 
         for( unsigned int i = 0; i < poolPointer->outputs; i++){
             neuron* neuronPointer = new neuron();
-            neuronPointer->activated = true;
             neurons.push_back(neuronPointer);
         }
+
+        resetValueVector = std::vector<double*>(16);
+        //HACK
+        for(unsigned int i = 0; i < 16; i++)
+            resetValueVector[i] = &(neurons[i]->value);
     }
     precision = 1.0;
     targetPrecision = PRECISION;
     calculateScore = true;
     maxTileSeen = 0;
+    inputActivated = std::vector<uint8_t>(poolPointer->inputs, false);
 }
 
 genome::genome(genome &copyGenome) {
@@ -60,9 +67,16 @@ genome::genome(genome &copyGenome) {
         neuronPointer->transfer = x->transfer;
         neuronPointer->bias = x->bias;
         neuronPointer->calculated = x->calculated;
-        neuronPointer->activated = x->activated;
         neurons.push_back(neuronPointer);
     }
+    inputValue = std::vector<double*>(poolPointer->inputs);
+    for(unsigned int i = 0; i < poolPointer->inputs; i++)
+        inputValue[i] = &(neurons[i]->value);
+
+    resetValueVector = std::vector<double*>(16);
+    //HACK
+    for(unsigned int i = 0; i < 16; i++)
+        resetValueVector[i] = &(neurons[i]->value);
 
     for( auto const& gene : genes ){
         if( gene->enabled ){
@@ -75,6 +89,7 @@ genome::genome(genome &copyGenome) {
     targetPrecision = PRECISION;
     calculateScore = true;
     maxTileSeen = copyGenome.maxTileSeen;
+    inputActivated = copyGenome.inputActivated;
 }
 
 genome* genome::basicGenome(pool *poolPtr){
@@ -92,15 +107,25 @@ genome* genome::crossover(genome* genome1, genome* genome2){
 
     genome *child = new genome(genome1->poolPointer, false);
     child->maxTileSeen = std::max(genome1->maxTileSeen, genome2->maxTileSeen);
+    child->inputActivated = genome1->inputActivated;
 
     for( auto const& x : genome1->neurons){
         neuron* neuronPointer = new neuron();
         neuronPointer->transfer = x->transfer;
         neuronPointer->bias = x->bias;
         neuronPointer->calculated = x->calculated;
-        neuronPointer->activated = x->activated;
         child->neurons.push_back(neuronPointer);
     }
+
+    child->inputValue = std::vector<double*>(child->poolPointer->inputs);
+    for(unsigned int i = 0; i < child->poolPointer->inputs; i++)
+        child->inputValue[i] = &(child->neurons[i]->value);
+
+    child->resetValueVector = std::vector<double*>(16);
+    for(unsigned int i = 0; i < 16; i++){
+        child->resetValueVector[i] = &(child->neurons[i]->value);
+    }
+
 
     gene* copyGene;
     std::map<unsigned int, gene*> innovations;
@@ -253,26 +278,20 @@ double genome::calculateNeuron(unsigned short neuronNumber){
     sum += tmp->bias;
     tmp->value = tmp->transfer(sum);
     tmp->calculated = true;
-    tmp->activated = tmp->activated || sum != 0.0;
 
     return tmp->value;
 }
 
-void genome::evaluate(uint64_t board, unsigned char maxTile, std::vector<double> &output){
+void genome::evaluate(uint64_t board, std::vector<double> &output){
     for(std::vector<neuron*>::iterator it = neurons.begin()+poolPointer->inputs; it != neurons.end(); ++it)
         (*it)->calculated = false;
 
-    if(maxTileSeen < maxTile)
-        maxTileSeen = maxTile;
-
-    for(unsigned short i = 0; i < 16*(maxTileSeen+1); ++i){
-        neuron *neuronPointer = neurons[i];
-
-        if(((board >> 4*(i%16)) & 0x000FULL) == i/16){
-            neuronPointer->value = 1.0;
-            neuronPointer->activated = true;
-        } else
-            neuronPointer->value = 0.0;
+    for(unsigned short i = 0; i < 16; ++i){
+        *(resetValueVector[i]) = 0.0;
+        unsigned short index = ((board >> 4*i) & 0x000FULL) + i*16;
+        *(inputValue[index]) = 1.0;
+        inputActivated[index] = true;
+        resetValueVector[i] = inputValue[index];
     }
 
     for(unsigned short i = 0; i < poolPointer->outputs; ++i){
@@ -291,9 +310,8 @@ bool genome::containsGene(gene* inputGene){
 unsigned short genome::randomNeuron(bool includeInput){
     std::vector<unsigned short> possible;
     for(unsigned short i = 0; i < neurons.size(); i++){
-        if(includeInput || !isInputNeuron(i))
-            if(neurons[i]->activated)
-                possible.push_back(i);
+        if((includeInput && isInputNeuron(i) && inputActivated[i]) || !isInputNeuron(i))
+            possible.push_back(i);
     }
     if(possible.size() > 0){
         unsigned short pick = (int)(rng[0].rand() * possible.size());
@@ -354,8 +372,6 @@ bool genome::linkAllowed(unsigned short neuron1, unsigned short neuron2){
     if(isOutputNeuron(neuron1))
         return false;
     if(neuron1 == neuron2)
-        return false;
-    if(!neurons[neuron1]->activated)
         return false;
 
     for(auto const& tmp : neurons)

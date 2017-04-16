@@ -134,7 +134,7 @@ set ylabel "neurons"
 set yrange [*:*]
 
 plot statsFile using 1:2 title "total neurons" w l ls 11,\
-statsFile using 1:3 title "active neurons" w l ls 12,\
+statsFile using 1:3 title "active input neurons" w l ls 12,\
 statsFile using 1:4 title "mutable neurons" w l ls 13,\
 statsFile using 1:5 title "total genes" axes x1y2 w l ls 21,\
 statsFile using 1:6 title "enabled genes" axes x1y2 w l ls 22,\

@@ -7,7 +7,6 @@ neuron::neuron(){
     depth = -1;
     calculated = false;
     bias = 0.0;
-    activated = false;
     transfer = &sigmoid;
 }
 

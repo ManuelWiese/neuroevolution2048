@@ -38,6 +38,9 @@ public:
     bool                                calculateScore;
 
     unsigned char                       maxTileSeen;
+    std::vector<uint8_t>                inputActivated;
+    std::vector<double*>                inputValue;
+    std::vector<double*>                resetValueVector;
 
 
                         genome(pool *poolPtr, bool createNeurons);
@@ -53,7 +56,7 @@ public:
     static bool         sameSpecies(genome *genome1, genome *genome2);
 
     double              calculateNeuron(unsigned short neuronNumber);
-    void                evaluate(uint64_t board, unsigned char maxTile, std::vector<double> &output);
+    void                evaluate(uint64_t board, std::vector<double> &output);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);
