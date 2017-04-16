@@ -228,6 +228,7 @@ void pool::writeStats(){
 
     //write tile probabilities
     std::vector<double> tileProbabilityGeneration(16, 0.0);
+    std::vector<double> bestTileProbability;
     for(auto const& spec : speciesVector){
         for(auto const& genom : spec->genomes){
             std::vector<double> tileProbability(16, 0.0);
@@ -237,6 +238,12 @@ void pool::writeStats(){
                         tileProbability[tile]++;
                 }
             }
+            if(genom->fitness == max){
+                bestTileProbability = tileProbability;
+                for(auto &tile : bestTileProbability)
+                    tile /= genom->maxTile.size();
+            }
+
             for(unsigned char tile = 0; tile < 16; ++tile)
                 tileProbabilityGeneration[tile] += (tileProbability[tile]/genom->maxTile.size())/population;
         }
@@ -244,6 +251,13 @@ void pool::writeStats(){
     fileHandle.open(timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "    ";
     for(auto const& prob : tileProbabilityGeneration)
+        fileHandle << prob << "    ";
+    fileHandle << std::endl;
+    fileHandle.close();
+
+    fileHandle.open(timestamp + "_bestGenomeTileprobability.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    ";
+    for(auto const& prob : bestTileProbability)
         fileHandle << prob << "    ";
     fileHandle << std::endl;
     fileHandle.close();
