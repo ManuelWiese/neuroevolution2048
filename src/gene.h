@@ -2,6 +2,7 @@
 #define GENE_H
 
 #include <cstdio>
+#include <iostream>
 
 class gene{
 public:
@@ -14,6 +15,9 @@ public:
     gene();
     gene(gene &copyGene);
     void print();
+
+    friend std::ostream& operator<<(std::ostream& os, const gene& g);
+    friend std::istream& operator>>(std::istream& is, gene& g);
 };
 
 #endif //GENE_H

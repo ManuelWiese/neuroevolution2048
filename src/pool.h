@@ -4,6 +4,7 @@
 #include "species.h"
 #include <string>
 #include <vector>
+#include <iostream>
 
 class pool{
 public:
@@ -17,10 +18,9 @@ public:
     unsigned short          population;
     unsigned short          inputs;
     unsigned short          outputs;
-    bool                    firstOfGeneration;
-    double                  stdev;
     double                  targetPrecision;
 
+                        pool();
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
                         ~pool();
     unsigned int        newInnovation();
@@ -35,6 +35,12 @@ public:
     void                newGeneration();
     bool                setPrecision();
     void                nextGenome();
+    void                save();
+    static pool         load(std::string filename);
+
+    friend std::ostream& operator<<(std::ostream& os, const pool& p);
+    friend std::istream& operator>>(std::istream& is, pool& p);
+
 };
 
 #endif //POOL_H

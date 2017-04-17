@@ -6,6 +6,10 @@
 #include <iostream>
 #include <fstream>
 
+pool::pool(){
+
+}
+
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     char buffer[256];
     int len;
@@ -45,7 +49,6 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     this->population = population;
     this->inputs = inputs;
     this->outputs = outputs;
-    firstOfGeneration = false;
     targetPrecision = PRECISION;
 
     for(unsigned short i = 0; i < population; i++){
@@ -409,21 +412,81 @@ void pool::newGeneration(){
         addToSpecies(child);
 
     generation += 1;
+
+    save();
 }
 
 void pool::nextGenome(){
     std::vector<genome*> currentGenomes = speciesVector[currentSpecies]->genomes;
     printf("%d  %d  %d  %f  %f  %lu  %f\n", generation, currentSpecies, currentGenome, currentGenomes[currentGenome]->fitness, currentGenomes[currentGenome]->precision, currentGenomes[currentGenome]->scores.size(), maxFitness);
     currentGenome += 1;
-    firstOfGeneration = false;
     if(currentGenome >= currentGenomes.size()){
         currentGenome = 0;
         currentSpecies += 1;
         if(currentSpecies >= speciesVector.size()){
             currentSpecies = 0;
-            //TODO: insert save here
             newGeneration();
-            firstOfGeneration = true;
         }
     }
+}
+
+void pool::save(){
+    std::ofstream ofs;
+    std::string filename = SAVEPATH + timestamp + "_" + std::to_string(generation) + ".save";
+    ofs.open (filename.c_str(), std::ofstream::out);
+
+    ofs << *this;
+
+    ofs.close();
+}
+
+pool pool::load(std::string filename){
+    pool output;
+    std::ifstream ifs;
+    ifs.open(filename.c_str());
+    ifs >> output;
+    return output;
+}
+
+std::ostream& operator<<(std::ostream& os, const pool& p){
+    os << p.timestamp << std::endl;
+    os << p.generation << std::endl;
+    os << p.innovation << std::endl;
+//    os << p.currentSpecies << std::endl;
+//    os << p.currentGenome << std::endl;
+    os << p.maxFitness << std::endl;
+    os << p.population << std::endl;
+    os << p.inputs << std::endl;
+    os << p.outputs << std::endl;
+    os << p.targetPrecision << std::endl;
+
+    os << p.speciesVector.size() << std::endl;
+    for(auto const& spec : p.speciesVector)
+        os << *spec;
+
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, pool& p){
+    is >> p.timestamp;
+    is >> p.generation;
+    is >> p.innovation;
+    p.currentSpecies = 0;
+    p.currentGenome = 0;
+    is >> p.maxFitness;
+    is >> p.population;
+    is >> p.inputs;
+    is >> p.outputs;
+    is >> p.targetPrecision;
+    unsigned int speciesVectorSize;
+    is >> speciesVectorSize;
+    for(unsigned int i = 0; i < speciesVectorSize; ++i){
+        species *speciesPointer = new species;
+        is >> *speciesPointer;
+        p.speciesVector.push_back(speciesPointer);
+    }
+    for(auto const& spec : p.speciesVector)
+        for(auto const& genom : spec->genomes)
+            genom->poolPointer = &p;
+    return is;
 }

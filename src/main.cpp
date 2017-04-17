@@ -3,6 +3,7 @@
 #include "game.h"
 #include "random_t.h"
 #include <omp.h>
+#include <iostream>
 
 std::random_device rd;
 std::mt19937 generator(rd());
@@ -21,7 +22,7 @@ int main(){
     }
     for(unsigned short i = 0; i < threads; ++i)
         rng.push_back(random_t());
-        
+
     game_t game;
     game.learn();
     return 0;

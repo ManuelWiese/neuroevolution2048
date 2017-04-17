@@ -26,3 +26,30 @@ genome* species::breedChild(){
     child->mutate();
     return child;
 }
+
+std::ostream& operator<<(std::ostream& os, const species& s){
+    os << s.topFitness << std::endl;
+    os << s.staleness << std::endl;
+    os << s.averageFitness << std::endl;
+
+    os << s.genomes.size() << std::endl;
+    for(auto const& genom : s.genomes)
+        os << *genom;
+
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, species& s){
+    is >> s.topFitness;
+    is >> s.staleness;
+    is >> s.averageFitness;
+
+    unsigned int genomesSize;
+    is >> genomesSize;
+    for(unsigned int i = 0; i < genomesSize; ++i){
+        genome* genomePointer = new genome();
+        is >> *genomePointer;
+        s.genomes.push_back(genomePointer);
+    }
+    return is;
+}

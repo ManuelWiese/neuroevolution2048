@@ -241,16 +241,18 @@ void game_t::play(genome* genom){
     std::vector<double> output(4);
     std::vector<move_t> sorted(4);
     bool legalmove;
+    board_t board;
+    board_t newBoard;
     while(genom->precision > genom->poolPointer->targetPrecision){
         for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
-            board_t board = initBoard();
+            board = initBoard();
             while(true){
                 genom->evaluate(board, output);
                 std::iota(sorted.begin(), sorted.end(), static_cast<size_t>(0));
                 std::sort(sorted.begin(), sorted.end(), [&](size_t a, size_t b){return output[a] > output[b];});
                 legalmove = false;
                 for(auto const& x : sorted){
-                    board_t newBoard = move(board, x);
+                    newBoard = move(board, x);
                     if(newBoard != board){
                         legalmove = true;
                         board = newBoard;
@@ -271,6 +273,8 @@ void game_t::play(genome* genom){
 
 void game_t::learn(){
     pool mainPool(N*N*16, 4, POPULATION);
+    //option to load savefile, not managed by commandline argument right now
+    //pool mainPool = pool::load("");
     //unsigned int counter = 0;
     while(true){
         //counter++;

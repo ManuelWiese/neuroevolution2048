@@ -4,7 +4,6 @@
 
 neuron::neuron(){
     value = 0.0;
-    depth = -1;
     calculated = false;
     bias = 0.0;
     transfer = &sigmoid;
@@ -127,4 +126,41 @@ void neuron::print(){
     for ( auto &i : incoming ) {
         i->print();
     }
+}
+
+std::ostream& operator<<(std::ostream& os, const neuron& n){
+    //no need to save incoming and deleted incoming, they are saved in genome
+    //no need to save value
+    os << n.bias << std::endl;
+    //no need to save calculated, checkedConnection and connected
+    short transferIndex = -1;
+    if(n.transfer == &neuron::sigmoid)
+        transferIndex = 0;
+    else if(n.transfer == &neuron::step)
+        transferIndex = 1;
+    else if(n.transfer == &neuron::slope)
+        transferIndex = 2;
+    else if(n.transfer == &neuron::id)
+        transferIndex = 3;
+
+    os << transferIndex << std::endl;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, neuron& n){
+    is >> n.bias;
+    short transferIndex;
+    is >> transferIndex;
+    if(transferIndex == 0){
+        n.transfer = &neuron::sigmoid;
+    }else if(transferIndex == 1){
+        n.transfer = &neuron::step;
+    }else if(transferIndex == 2){
+        n.transfer = &neuron::slope;
+    }else if(transferIndex == 3){
+        n.transfer = &neuron::id;
+    }else{
+        printf("transferIndex %d not found, savefile corrupted?\n", transferIndex);
+    }
+    return is;
 }

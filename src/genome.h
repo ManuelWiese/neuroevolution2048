@@ -34,15 +34,15 @@ public:
     std::vector<double>                 scores;
     std::vector<unsigned char>          maxTile;
     double                              precision;
-    double                              targetPrecision;
-    bool                                calculateScore;
+    //double                              targetPrecision;
+    //bool                                calculateScore;
 
-    unsigned char                       maxTileSeen;
+    //unsigned char                       maxTileSeen;
     std::vector<uint8_t>                inputActivated;
     std::vector<double*>                inputValue;
     std::vector<double*>                resetValueVector;
 
-
+                        genome();
                         genome(pool *poolPtr, bool createNeurons);
                         genome(genome &copyGenome);
     static genome*      basicGenome(pool *poolPointer);
@@ -75,6 +75,9 @@ public:
     void                deleteDisabledMutate();
 
     void                calculateFitness();
+
+    friend std::ostream& operator<<(std::ostream& os, const genome& g);
+    friend std::istream& operator>>(std::istream& is, genome& g);
 };
 
 #endif //GENOME_H

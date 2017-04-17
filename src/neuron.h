@@ -4,6 +4,7 @@
 #include "gene.h"
 #include <vector>
 #include <array>
+#include <iostream>
 
 
 class neuron{
@@ -11,7 +12,6 @@ public:
     std::vector<gene*>  incoming;
     std::vector<gene*>  disabledIncoming;
     double              value;
-    short               depth;
     double              bias;
     bool                calculated;
 
@@ -36,6 +36,9 @@ public:
     void                enableIncoming(gene *geneIncoming);
 
     void                print();
+
+    friend std::ostream& operator<<(std::ostream& os, const neuron& n);
+    friend std::istream& operator>>(std::istream& is, neuron& n);
 };
 
 

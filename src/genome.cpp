@@ -3,6 +3,18 @@
 #include <limits>
 #include <utility>
 
+genome::genome(){
+    mutationRates["weight"] = WEIGHT_MUTATION_CHANCE;
+    mutationRates["link"] = LINK_MUTATION_CHANCE;
+    mutationRates["bias"] = BIAS_MUTATION_CHANCE;
+    mutationRates["node"] = NODE_MUTATION_CHANCE;
+    mutationRates["enable"] = ENABLE_MUTATION_CHANCE;
+    mutationRates["disable"] = DISABLE_MUTATION_CHANCE;
+    mutationRates["transfer"] = TRANSFER_MUTATION_CHANCE;
+    mutationRates["delete"] = DELETE_MUTATION_CHANCE;
+    mutationRates["step"] = STEPSIZE;
+}
+
 genome::genome(pool *poolPtr, bool createNeurons = true){
     fitness = std::numeric_limits<double>::min();
     maxneuron = poolPtr->inputs + poolPtr->outputs - 1;
@@ -38,10 +50,7 @@ genome::genome(pool *poolPtr, bool createNeurons = true){
             resetValueVector[i] = &(neurons[i]->value);
     }
     precision = 1.0;
-    targetPrecision = PRECISION;
-    calculateScore = true;
-    maxTileSeen = 0;
-    inputActivated = std::vector<uint8_t>(poolPointer->inputs, false);
+    inputActivated = std::vector<uint8_t>(poolPointer->inputs, 0);
 }
 
 genome::genome(genome &copyGenome) {
@@ -86,9 +95,6 @@ genome::genome(genome &copyGenome) {
         }
     }
     precision = 1.0;
-    targetPrecision = PRECISION;
-    calculateScore = true;
-    maxTileSeen = copyGenome.maxTileSeen;
     inputActivated = copyGenome.inputActivated;
 }
 
@@ -106,7 +112,6 @@ genome* genome::crossover(genome* genome1, genome* genome2){
     }
 
     genome *child = new genome(genome1->poolPointer, false);
-    child->maxTileSeen = std::max(genome1->maxTileSeen, genome2->maxTileSeen);
     child->inputActivated = genome1->inputActivated;
 
     for( auto const& x : genome1->neurons){
@@ -260,7 +265,7 @@ bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dw = DELTA_WEIGHTS * weights(genome1, genome2);
     double db = DELTA_BIAS * bias(genome1, genome2);
     double dt = DELTA_TRANSFER * transfer(genome1, genome2);
-    double dr = DELTA_RATES * rates(genome1, genome2);
+    //double dr = DELTA_RATES * rates(genome1, genome2);
 
     return( dd + dw + db + dt < DELTA_THRESHOLD);
 }
@@ -609,4 +614,100 @@ void genome::calculateFitness(){
     variance *= (scores.size()-1.0)/scores.size();
     precision = sqrt(variance)/mean;
     fitness = mean;
+}
+
+std::ostream& operator<<(std::ostream& os, const genome& g){
+    os << g.genes.size() << std::endl;
+    for(auto const& gen : g.genes)
+        os << *gen;
+    os << g.fitness << std::endl;
+    os << g.maxneuron << std::endl;
+    os << g.globalRank << std::endl;
+    for(auto const& mutation : g.mutationRates)
+        os << mutation.second << std::endl;
+
+    os << g.neurons.size() << std::endl;
+    for(auto const& neur : g.neurons)
+        os << *neur;
+
+    os << g.scores.size() << std::endl;
+    for(auto const& score : g.scores)
+        os << score << std::endl;
+    for(auto const& maxT : g.maxTile)
+        os << (unsigned short)maxT << std::endl;
+
+    os << g.precision << std::endl;
+
+    os << g.inputActivated.size() << std::endl;
+    for(auto const& ia : g.inputActivated)
+        os << (unsigned short)ia << std::endl;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, genome& g){
+    unsigned int genesSize;
+    is >> genesSize;
+    for(unsigned int i = 0; i < genesSize; ++i){
+        gene *newGene = new gene();
+        is >> *newGene;
+        g.genes.push_back(newGene);
+    }
+
+    is >> g.fitness;
+    is >> g.maxneuron;
+    is >> g.globalRank;
+    for(auto &mutation : g.mutationRates){
+        is >> mutation.second;
+    }
+
+    unsigned int neuronsSize;
+    is >> neuronsSize;
+    for(unsigned int i = 0; i < neuronsSize; ++i){
+        neuron* newNeuron = new neuron();
+        is >> *newNeuron;
+        g.neurons.push_back(newNeuron);
+    }
+
+    unsigned int scoresSize;
+    is >> scoresSize;
+    for(unsigned int i = 0; i < scoresSize; ++i){
+        double score;
+        is >> score;
+        g.scores.push_back(score);
+    }
+    for(unsigned int i = 0; i < scoresSize; ++i){
+        unsigned short maxT;
+        is >> maxT;
+        g.maxTile.push_back(maxT);
+    }
+
+    is >> g.precision;
+    unsigned int inputActivatedSize;
+    is >> inputActivatedSize;
+    for(unsigned int i = 0; i < inputActivatedSize; ++i){
+        unsigned short activated;
+        is >> activated;
+        g.inputActivated.push_back(activated);
+    }
+
+    g.inputValue = std::vector<double*>(inputActivatedSize);
+    for(unsigned int i = 0; i < inputActivatedSize; ++i)
+        g.inputValue[i] = &(g.neurons[i]->value);
+
+    g.resetValueVector = std::vector<double*>(16);
+    //HACK
+    for(unsigned int i = 0; i < 16; i++)
+        g.resetValueVector[i] = &(g.neurons[i]->value);
+
+    for( auto const& gene : g.genes ){
+        if( gene->enabled ){
+            g.neurons[gene->out]->addIncoming(gene);
+        } else{
+            g.neurons[gene->out]->addDisabledIncoming(gene);
+        }
+    }
+    for(unsigned int i = 0; i < inputActivatedSize; i++){
+        g.neurons[i]->calculated = true;
+    }
+    return is;
 }

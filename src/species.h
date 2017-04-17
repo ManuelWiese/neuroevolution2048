@@ -17,13 +17,15 @@ class species{
 public:
     double                  topFitness;
     unsigned short          staleness;
-    std::vector<genome*>    genomes;
     double                  averageFitness;
+    std::vector<genome*>    genomes;
 
                     species();
     void            calculateAverageFitness();
     genome*         breedChild();
 
+    friend std::ostream& operator<<(std::ostream& os, const species& s);
+    friend std::istream& operator>>(std::istream& is, species& s);
 };
 
 #endif //SPECIES_H

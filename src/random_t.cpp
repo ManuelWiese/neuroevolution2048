@@ -201,4 +201,5 @@ std::ostream& operator<<(std::ostream& os, const random_t& s) {
     os << s.seed << "\n";
     os << s.randomNumber[0] << "\n";
     os << s.randomNumber[1] << "\n";
+    return os;
 }
