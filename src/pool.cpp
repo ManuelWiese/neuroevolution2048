@@ -7,7 +7,8 @@
 #include <fstream>
 
 pool::pool(){
-
+    currentSpecies = 0;
+    currentGenome = 0;
 }
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
@@ -413,7 +414,7 @@ void pool::newGeneration(){
 
     generation += 1;
 
-    save();
+    //save();
 }
 
 void pool::nextGenome(){
