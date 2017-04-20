@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
 import sys
 
 if len(sys.argv) != 2:
@@ -141,5 +143,22 @@ ax62.plot(transposedStatsData[0], transposedStatsData[6], color=colors[6], label
 
 ax61.legend(loc=2)
 ax62.legend(loc=3)
+
+fitnessFile = name + "_fitness.dat"
+fitnessData = []
+with open(fitnessFile, "r") as f:
+	for line in f:
+		fitnessData.append([float(x) for x in line.split()])
+
+pointsX = [fitnessData[x][0] for x in range(len(fitnessData)) for y in range(1, len(fitnessData[0]))]
+pointsY = [fitnessData[x][y] for x in range(len(fitnessData)) for y in range(1, len(fitnessData[0]))]
+hist, xedges, yedges = np.histogram2d(pointsX, pointsY, bins=(len(fitnessData), 150))
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+fig6, ax61 = plt.subplots()
+plt.imshow(hist.T, extent=extent, origin='lower', aspect=6, interpolation='none')
+plt.plot(transposedGenerationData[0], transposedGenerationData[3], 'r')
+plt.plot(transposedGenerationData[0], transposedGenerationData[1], 'b')
+plt.plot(transposedGenerationData[0], transposedGenerationData[4], 'g')
 
 plt.show()
