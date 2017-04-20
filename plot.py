@@ -158,7 +158,7 @@ hist, xedges, yedges = np.histogram2d(pointsX, pointsY, bins=(len(fitnessData), 
 extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
 fig6, ax61 = plt.subplots()
-plt.imshow(hist.T, extent=extent, origin='lower', aspect=6, interpolation='none')
+plt.imshow(hist.T, extent=extent, origin='lower', aspect='auto', interpolation='none')
 plt.plot(transposedGenerationData[0], transposedGenerationData[3], 'r')
 plt.plot(transposedGenerationData[0], transposedGenerationData[1], 'b')
 plt.plot(transposedGenerationData[0], transposedGenerationData[4], 'g')
@@ -175,7 +175,7 @@ for generation in range(len(speciesData)):
 	species = 1
 	populationSum = 0
 	while species < len(speciesData[generation]):
-		color = randomColors[int(speciesData[generation][species])]
+		color = randomColors[int(speciesData[generation][species])%1024]
 		population = speciesData[generation][species+1]
 		x = [generation, generation+1]
 		y1 = [populationSum, populationSum]
