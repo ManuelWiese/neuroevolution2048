@@ -1,9 +1,13 @@
 #include "species.h"
 
+unsigned int species::number = 0;
+
 species::species(){
     topFitness = std::numeric_limits<double>::min();
     staleness = 0;
     averageFitness = 0;
+    speciesNumber = number;
+    number++;
 }
 
 void species::calculateAverageFitness(){

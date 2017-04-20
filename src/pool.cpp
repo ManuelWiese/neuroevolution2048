@@ -329,6 +329,13 @@ void pool::writeStats(){
             fileHandle << genom->fitness << "    ";
     fileHandle << std::endl;
     fileHandle.close();
+
+    fileHandle.open(timestamp + "_species.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "    ";
+    for(auto const& spec : speciesVector)
+        fileHandle << spec->speciesNumber << "    " << spec->genomes.size() << "    ";
+    fileHandle << std::endl;
+    fileHandle.close();
 }
 
 bool pool::setPrecision(){

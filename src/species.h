@@ -20,6 +20,9 @@ public:
     double                  averageFitness;
     std::vector<genome*>    genomes;
 
+    static unsigned int 	number;
+    unsigned int 			speciesNumber;
+    
                     species();
     void            calculateAverageFitness();
     genome*         breedChild();

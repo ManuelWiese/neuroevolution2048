@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import sys
+import random
 
 if len(sys.argv) != 2:
 	print("Usage: plot.py NAME")
@@ -10,6 +11,7 @@ if len(sys.argv) != 2:
 name = sys.argv[1]
 
 colors = ["#A00000", "#FF0000", "#FF8080","#FFC0C0", "#0000A0", "#0000FF", "#8080FF", "#C0C0FF", "#00A000", "#00FF00"]
+randomColors = [(random.random(), random.random(), random.random()) for i in range(1024)]
 
 generationFile = name +"_generation.dat"
 generationData = []
@@ -160,5 +162,27 @@ plt.imshow(hist.T, extent=extent, origin='lower', aspect=6, interpolation='none'
 plt.plot(transposedGenerationData[0], transposedGenerationData[3], 'r')
 plt.plot(transposedGenerationData[0], transposedGenerationData[1], 'b')
 plt.plot(transposedGenerationData[0], transposedGenerationData[4], 'g')
+
+speciesFile = name + "_species.dat"
+speciesData = []
+with open(speciesFile, "r") as f:
+	for line in f:
+		speciesData.append([float(x) for x in line.split()])
+
+fig7, ax71 = plt.subplots()
+
+for generation in range(len(speciesData)):
+	species = 1
+	populationSum = 0
+	while species < len(speciesData[generation]):
+		color = randomColors[int(speciesData[generation][species])]
+		population = speciesData[generation][species+1]
+		x = [generation, generation+1]
+		y1 = [populationSum, populationSum]
+		y2 = [populationSum+population, populationSum+population]
+		ax71.fill_between(x, y1, y2, facecolor=color, lw=0.0)
+		#plt.plot()
+		species += 2
+		populationSum += population
 
 plt.show()
