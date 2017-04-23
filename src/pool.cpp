@@ -340,9 +340,10 @@ void pool::writeStats(){
 
 bool pool::setPrecision(){
     double mean = 0.0, min = std::numeric_limits<double>::max(), max = 0.0;
-    std::vector<double> boundary;
-    std::vector<double> fitness;
+    bool increasePrecision = false;
     for(auto const& spec : speciesVector){
+        std::vector<double> boundary;
+        std::vector<double> fitness;
         for(auto const& genom : spec->genomes){
             fitness.push_back(genom->fitness);
             if(genom->fitness < min)
@@ -351,42 +352,42 @@ bool pool::setPrecision(){
                 max = genom->fitness;
             mean += genom->fitness;
         }
-    }
-    boundary.push_back(min*(1+targetPrecision));
-    double upperBoundary = boundary[0];
-    while(upperBoundary < max){
-        upperBoundary *= 1 + targetPrecision;
-        boundary.push_back(upperBoundary);
-    }
-    std::vector<unsigned int> freq(boundary.size(), 0);
-    std::sort(fitness.begin(), fitness.end());
-    std::vector<double>::iterator fitnessIterator= fitness.begin();
-    for(unsigned int i = 0; i < boundary.size(); i++){
-        while((*fitnessIterator) < boundary[i] && fitnessIterator != fitness.end()){
+	boundary.push_back(min*(1+targetPrecision));
+	double upperBoundary = boundary[0];
+	while(upperBoundary < max){
+	  upperBoundary *= 1 + targetPrecision;
+	  boundary.push_back(upperBoundary);
+	}
+	std::vector<unsigned int> freq(boundary.size(), 0);
+	std::sort(fitness.begin(), fitness.end());
+	std::vector<double>::iterator fitnessIterator= fitness.begin();
+	for(unsigned int i = 0; i < boundary.size(); i++){
+	  while((*fitnessIterator) < boundary[i] && fitnessIterator != fitness.end()){
             freq[i]++;
             fitnessIterator++;
-        }
+	  }
+	}
+	double entropy = 0;
+	for(unsigned int i = 0; i < freq.size(); i++){
+	  if(freq[i] != 0)
+            entropy -= freq[i] * log(freq[i] * 1.0 / spec->genomes.size()) / spec->genomes.size();
+	}
+	printf("entropy of species %d: %f %f\n", spec->speciesNumber, entropy, log(spec->genomes.size()*1.0/CULL_MINIMUM));
+	if(!(entropy > log(spec->genomes.size()*1.0/CULL_MINIMUM))){
+	  increasePrecision = true;
+	}
     }
-    double entropy = 0;
-    for(unsigned int i = 0; i < freq.size(); i++){
-        if(freq[i] != 0)
-            entropy -= freq[i] * log(freq[i] * 1.0 / population) / population;
+    if(generation < 1)
+      return false;
+    if(increasePrecision){
+      targetPrecision /= 1.1;
+      printf("Rerun with precision %f\n", targetPrecision);
+      return true;
+    } else {
+      printf("Finished this generation\n");
+      targetPrecision *= 1.25;
+      return false;
     }
-    printf("entropy: %f\n", entropy);
-    if(entropy > log(population/CULL_MINIMUM)){
-        targetPrecision *= 1.25;
-        printf("newPrecision: %f\n", targetPrecision);
-        return false;
-    }
-    else{
-        //first run is to activate the input neurons
-        if(generation < 1)
-            return false;
-        targetPrecision /= 1.1;
-        printf("rerun with precision: %f\n", targetPrecision);
-        return true;
-    }
-
 }
 
 void pool::newGeneration(){
