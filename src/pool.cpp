@@ -51,7 +51,8 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     this->inputs = inputs;
     this->outputs = outputs;
     targetPrecision = PRECISION;
-
+    deltaThreshold = DELTA_THRESHOLD;
+    
     for(unsigned short i = 0; i < population; i++){
         addToSpecies(genome::basicGenome(this));
     }
@@ -319,6 +320,7 @@ void pool::writeStats(){
                << enabledGenes/population << "    "
                << disabledGenes/population << "    "
                << speciesVector.size() << "    "
+               << deltaThreshold << "   "
                << std::endl;
     fileHandle.close();
 
@@ -339,9 +341,9 @@ void pool::writeStats(){
 }
 
 bool pool::setPrecision(){
-    double mean = 0.0, min = std::numeric_limits<double>::max(), max = 0.0;
     bool increasePrecision = false;
     for(auto const& spec : speciesVector){
+        double mean = 0.0, min = std::numeric_limits<double>::max(), max = 0.0;
         std::vector<double> boundary;
         std::vector<double> fitness;
         for(auto const& genom : spec->genomes){
@@ -393,6 +395,13 @@ bool pool::setPrecision(){
 void pool::newGeneration(){
     if(setPrecision())
         return;
+
+    if(speciesVector.size() < MIN_SPECIES)
+      deltaThreshold /= 1.025;
+    //if(speciesVector.size() > MAX_SPECIES)
+    //  if(deltaThreshold < DELTA_THRESHOLD)
+    //    deltaThreshold *= 1.025;
+    
     setMaxFitness();
     writeStats();
     cullSpecies(false);

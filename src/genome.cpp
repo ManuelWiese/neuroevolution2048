@@ -266,8 +266,9 @@ bool genome::sameSpecies(genome* genome1, genome* genome2){
     double db = DELTA_BIAS * bias(genome1, genome2);
     double dt = DELTA_TRANSFER * transfer(genome1, genome2);
     //double dr = DELTA_RATES * rates(genome1, genome2);
-
-    return( dd + dw + db + dt < DELTA_THRESHOLD);
+    //Use variable threshold, set in pool
+    //return( dd + dw + db + dt < DELTA_THRESHOLD);
+    return( dd + dw + db + dt < genome1->poolPointer->deltaThreshold);
 }
 
 double genome::calculateNeuron(unsigned short neuronNumber){

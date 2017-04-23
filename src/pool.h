@@ -19,7 +19,8 @@ public:
     unsigned short          inputs;
     unsigned short          outputs;
     double                  targetPrecision;
-
+    double                  deltaThreshold;
+    
                         pool();
                         pool(unsigned short inputs, unsigned short outputs, unsigned short population);
                         ~pool();
