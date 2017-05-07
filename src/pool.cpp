@@ -1,3 +1,4 @@
+
 #include "genome.h"
 #include "pool.h"
 #include <ctime>
@@ -5,7 +6,6 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-
 pool::pool(){
     currentSpecies = 0;
     currentGenome = 0;
@@ -15,6 +15,8 @@ pool::pool(unsigned short inputs, unsigned short outputs, unsigned short populat
     char buffer[256];
     int len;
     len = std::sprintf(buffer, "%sPOP%d_RUNS%d_DD%.3f_DW%.3fDB%.3f_DT%.3f_DR%.3f_THR%.3f_WR%.3f_BR%.3f_CULLMIN%d_STALE%d_PC%.3f_CC%.3f_LI%.3f_NO%.3f_BI%.3f_WE%.3f_TR%.3f_DI%.3f_EN%.3f_DE%.3f_STEP%.3f",
+
+		     
                                 NAME_PREFIX,
                                 POPULATION,
                                 RUNS_PER_NETWORK,
@@ -392,16 +394,38 @@ bool pool::setPrecision(){
     }
 }
 
+void pool::checkVariance(){
+    double mean = 0.0;
+    for(auto const& spec : speciesVector){
+	for(auto const& genom : spec->genomes){
+	    mean += genom->fitness/population;
+	}
+    }
+
+    double variance = 0.0;
+    for(auto const& spec : speciesVector){
+	for(auto const& genom : spec->genomes){
+	    variance += std::pow(mean - genom->fitness, 2)/population;
+	}
+    }
+
+    if(sqrt(variance)/mean < MUTATIONRATE_THRESHOLD){
+	for(auto const& spec : speciesVector){
+	    for(auto const& genom : spec->genomes){
+		for(auto const& mutation : genom->mutationRates){
+		    genom->mutationRates[mutation.first] *= MUTATIONRATE_FACTOR;
+               }
+	    }
+	}
+    }
+    printf("%f\n", sqrt(variance)/mean);
+}
+
 void pool::newGeneration(){
     if(setPrecision())
         return;
 
-    if(speciesVector.size() < MIN_SPECIES)
-      deltaThreshold /= 1.025;
-    //if(speciesVector.size() > MAX_SPECIES)
-    //  if(deltaThreshold < DELTA_THRESHOLD)
-    //    deltaThreshold *= 1.025;
-    
+    //checkVariance();
     setMaxFitness();
     writeStats();
     cullSpecies(false);

@@ -1,4 +1,4 @@
-#define POPULATION  150
+#define POPULATION  300
 #define RUNS_PER_NETWORK 1000
 
 #define DELTA_DISJOINT  1.0
@@ -6,9 +6,7 @@
 #define DELTA_BIAS 0.4
 #define DELTA_TRANSFER 1.0
 #define DELTA_RATES	0.0
-#define DELTA_THRESHOLD  1.5
-#define MIN_SPECIES 6
-#define MAX_SPECIES 10
+#define DELTA_THRESHOLD  2.0
 
 #define WEIGHT_RANGE  2.0
 #define BIAS_RANGE  2.0
@@ -29,6 +27,9 @@
 #define DELETE_MUTATION_CHANCE  0.1
 
 #define STEPSIZE  0.1
+
+#define MUTATIONRATE_THRESHOLD 0.04
+#define MUTATIONRATE_FACTOR 1.01
 
 #define PRECISION 0.01
 

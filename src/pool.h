@@ -35,6 +35,7 @@ public:
     void                writeStats();
     void                newGeneration();
     bool                setPrecision();
+    void                checkVariance();
     void                nextGenome();
     void                save();
     static pool         load(std::string filename);
