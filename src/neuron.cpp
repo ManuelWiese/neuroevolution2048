@@ -6,7 +6,7 @@ neuron::neuron(){
     value = 0.0;
     calculated = false;
     bias = 0.0;
-    transfer = &sigmoid;
+    transfer = &id;
 }
 
 std::array<double, 201> neuron::sigmoidArray = {0.000045, 0.000050, 0.000055, 0.000061, 0.000068, 0.000075,
@@ -54,6 +54,10 @@ double neuron::sigmoid(double x){
     return sigmoidArray[index] + delta*(x-(index)*0.1+10);
 }
 
+double neuron::dSigmoidInvSigmoid(double y){
+    return y*(1-y);
+}
+
 /*double neuron::sigmoid(double x){
 	return 1.0/(1.0+exp(-x));
 }*/
@@ -74,6 +78,10 @@ double neuron::slope(double x){
 
 double neuron::id(double x){
     return x;
+}
+
+double neuron::dId(double y){
+    return 1.0;
 }
 
 void neuron::addIncoming(gene *geneIncoming){
@@ -116,6 +124,21 @@ void neuron::enableIncoming(gene *geneIncoming){
     if(it != disabledIncoming.end()){
         disabledIncoming.erase(it);
         addIncoming(geneIncoming);
+        return;
+    }
+    printf("Cannot remove gene, gene not found\n");
+    return;
+}
+
+void neuron::addOutgoing(gene *geneOutgoing){
+    outgoing.push_back(geneOutgoing);
+}
+
+void neuron::removeOutgoing(gene *geneOutgoing){
+    std::vector<gene*>::iterator it;
+    it = find (outgoing.begin(), outgoing.end(), geneOutgoing);
+    if (it != outgoing.end()) {
+        outgoing.erase(it);
         return;
     }
     printf("Cannot remove gene, gene not found\n");

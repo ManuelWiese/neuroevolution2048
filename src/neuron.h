@@ -11,6 +11,8 @@ class neuron{
 public:
     std::vector<gene*>  incoming;
     std::vector<gene*>  disabledIncoming;
+    std::vector<gene*>  outgoing;
+    
     double              value;
     double              bias;
     bool                calculated;
@@ -18,15 +20,19 @@ public:
     bool                checkedConnection;
     bool                connected;
 
+    double              delta;
+
                         neuron();
 
     double              (*transfer)(double);
 
     static std::array<double, 201> sigmoidArray;
     static double       sigmoid(double x);
+    static double       dSigmoidInvSigmoid(double y);
     static double       step(double x);
     static double       slope(double x);
     static double       id(double x);
+    static double       dId(double y);
 
     void                addIncoming(gene *geneIncoming);
     void                removeIncoming(gene *geneIncoming);
@@ -34,6 +40,9 @@ public:
     void                removeDisabledIncoming(gene* geneIncoming);
     void                disableIncoming(gene *geneIncoming);
     void                enableIncoming(gene *geneIncoming);
+
+    void                addOutgoing(gene *geneOutgoing);
+    void                removeOutgoing(gene *geneOutgoing);
 
     void                print();
 

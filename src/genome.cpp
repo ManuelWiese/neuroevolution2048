@@ -90,6 +90,7 @@ genome::genome(genome &copyGenome) {
     for( auto const& gene : genes ){
         if( gene->enabled ){
             neurons[gene->out]->addIncoming(gene);
+	    neurons[gene->into]->addOutgoing(gene);
         } else{
             neurons[gene->out]->addDisabledIncoming(gene);
         }
@@ -149,8 +150,10 @@ genome* genome::crossover(genome* genome1, genome* genome2){
                 copyGene = new gene(*gene1);
         } else
             copyGene = new gene(*gene1);
-        if( copyGene->enabled )
+        if( copyGene->enabled ){
             child->neurons[copyGene->out]->addIncoming(copyGene);
+	    child->neurons[copyGene->into]->addOutgoing(copyGene);
+	}
         else
             child->neurons[copyGene->out]->addDisabledIncoming(copyGene);
         child->genes.push_back(copyGene);
@@ -267,8 +270,8 @@ bool genome::sameSpecies(genome* genome1, genome* genome2){
     double dt = DELTA_TRANSFER * transfer(genome1, genome2);
     //double dr = DELTA_RATES * rates(genome1, genome2);
     //Use variable threshold, set in pool
-    //return( dd + dw + db + dt < DELTA_THRESHOLD);
-    return( dd + dw + db + dt < genome1->poolPointer->deltaThreshold);
+    return( dd + dw + db + dt < DELTA_THRESHOLD);
+    //return( dd + dw + db + dt < genome1->poolPointer->deltaThreshold);
 }
 
 double genome::calculateNeuron(unsigned short neuronNumber){
@@ -284,7 +287,7 @@ double genome::calculateNeuron(unsigned short neuronNumber){
     sum += tmp->bias;
     tmp->value = tmp->transfer(sum);
     tmp->calculated = true;
-
+    
     return tmp->value;
 }
 
@@ -293,6 +296,7 @@ void genome::evaluate(uint64_t board, std::vector<double> &output){
         (*it)->calculated = false;
 
     for(unsigned short i = 0; i < 16; ++i){
+	neurons[i]->calculated = true;
         *(resetValueVector[i]) = 0.0;
         unsigned short index = ((board >> 4*i) & 0x000FULL) + i*16;
         *(inputValue[index]) = 1.0;
@@ -303,6 +307,54 @@ void genome::evaluate(uint64_t board, std::vector<double> &output){
     for(unsigned short i = 0; i < poolPointer->outputs; ++i){
         output[i] = calculateNeuron(poolPointer->inputs + i);
     }
+}
+
+double genome::calculateNeuronError(unsigned short neuronNumber){
+    neuron* tmp = neurons[neuronNumber];
+
+    if(tmp->calculated)
+	return tmp->delta;
+
+    double sum = 0.0;
+    for(auto const& gene : tmp->outgoing)
+	sum += gene->weight * calculateNeuronError(gene->out);
+    if(tmp->transfer == &neuron::sigmoid)
+	tmp->delta = sum * neuron::dSigmoidInvSigmoid(tmp->value);
+    else
+	tmp->delta = sum;
+    tmp->calculated = true;
+
+    return tmp->delta;
+}
+
+void genome::backpropagation(std::vector<double> &target){
+    for(std::vector<neuron*>::iterator it = neurons.begin(); it != neurons.end(); ++it)
+        (*it)->calculated = false;
+
+    for(unsigned short i = 0; i < poolPointer->outputs; ++i){
+	neuron* tmp = neurons[poolPointer->inputs + i];
+	tmp->calculated = true;
+	if(tmp->transfer == &neuron::sigmoid)
+	    tmp->delta = (target[i] - tmp->value) * neuron::dSigmoidInvSigmoid(tmp->value);
+	else
+	    tmp->delta = (target[i] - tmp->value);
+    }
+
+    for(unsigned short i = 0; i < poolPointer->inputs; ++i){
+	if(inputActivated[i])
+	    calculateNeuronError(i);
+    }
+
+    for(auto const& gen : genes){
+	if(gen->enabled)
+	    gen->weight += LEARNING_RATE * neurons[gen->into]->value * neurons[gen->out]->delta;
+
+    }
+
+    for(std::vector<neuron*>::iterator it = neurons.begin()+poolPointer->inputs; it != neurons.end(); it++){
+	(*it)->bias += LEARNING_RATE * (*it)->delta;
+    }
+    
 }
 
 bool genome::containsGene(gene* inputGene){
@@ -496,6 +548,7 @@ void genome::linkMutate(){
     newGene->weight = (rng[0].rand() - 0.5)*WEIGHT_RANGE;
     genes.push_back(newGene);
     neurons[neuron2]->addIncoming(newGene);
+    neurons[neuron1]->addOutgoing(newGene);
 }
 
 void genome::biasMutate(){
@@ -517,6 +570,7 @@ void genome::nodeMutate(){
 
     gene* oldGene = genes[randomIndex];
     neurons[oldGene->out]->disableIncoming(oldGene);
+    neurons[oldGene->into]->removeOutgoing(oldGene);
     oldGene->enabled = false;
 
     maxneuron += 1;
@@ -530,6 +584,7 @@ void genome::nodeMutate(){
     neuron* neuronPointer = new neuron();
     neuronPointer->transfer = &neuron::id;
     neuronPointer->addIncoming(gene1);
+    neurons[gene1->into]->addOutgoing(gene1);
     neurons.push_back(neuronPointer);
 
     gene* gene2 = new gene();
@@ -539,6 +594,7 @@ void genome::nodeMutate(){
     gene2->innovation = poolPointer->newInnovation();
     genes.push_back(gene2);
     neurons[gene2->out]->addIncoming(gene2);
+    neurons[gene2->into]->addOutgoing(gene2);
 }
 
 void genome::enableToDisableMutate(){
@@ -554,6 +610,7 @@ void genome::enableToDisableMutate(){
     gene* pick = candidates[(int)(rng[0].rand()*candidates.size())];
     pick->enabled = false;
     neurons[pick->out]->disableIncoming(pick);
+    neurons[pick->into]->removeOutgoing(pick);
 }
 
 void genome::disableToEnableMutate(){
@@ -569,17 +626,18 @@ void genome::disableToEnableMutate(){
     gene* pick = candidates[(int)(rng[0].rand()*candidates.size())];
     pick->enabled = true;
     neurons[pick->out]->enableIncoming(pick);
+    neurons[pick->into]->addOutgoing(pick);
 }
 
 void genome::transferMutate(){
     unsigned short randomIndex = randomNeuron(false);
     double pick = rng[0].rand();
-    if(pick < 0.25)
+    if(pick < 0.5)
         neurons[randomIndex]->transfer = &neuron::sigmoid;
-    else if(pick < 0.5)
-        neurons[randomIndex]->transfer = &neuron::step;
-    else if(pick < 0.75)
-        neurons[randomIndex]->transfer = &neuron::slope;
+    //else if(pick < 0.5)
+    //    neurons[randomIndex]->transfer = &neuron::step;
+    //else if(pick < 0.75)
+    //    neurons[randomIndex]->transfer = &neuron::slope;
     else
         neurons[randomIndex]->transfer = &neuron::id;
 }
@@ -703,6 +761,7 @@ std::istream& operator>>(std::istream& is, genome& g){
     for( auto const& gene : g.genes ){
         if( gene->enabled ){
             g.neurons[gene->out]->addIncoming(gene);
+	    g.neurons[gene->into]->addOutgoing(gene);
         } else{
             g.neurons[gene->out]->addDisabledIncoming(gene);
         }

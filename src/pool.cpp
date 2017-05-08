@@ -422,8 +422,8 @@ void pool::checkVariance(){
 }
 
 void pool::newGeneration(){
-    if(setPrecision())
-        return;
+    //if(setPrecision())
+    //    return;
 
     //checkVariance();
     setMaxFitness();

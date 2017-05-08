@@ -1,5 +1,6 @@
 #include "game.h"
 #include <omp.h>
+#include <algorithm>
 
 game_t::game_t(){
     for(unsigned int row = 0; row < 65536; ++row){
@@ -239,10 +240,60 @@ std::vector<move_t> game_t::sortOutput(std::vector<double> &output){
 
 void game_t::play(genome* genom){
     std::vector<double> output(4);
+    std::vector<double> nextOutput(4);
     std::vector<move_t> sorted(4);
     bool legalmove;
     board_t board;
     board_t newBoard;
+
+    std::vector<move_t> actions;
+    std::vector<board_t> boards;
+    std::vector<double> values;
+    
+    //while(genom->precision > genom->poolPointer->targetPrecision){
+        for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
+            board = initBoard();
+            while(true){
+                genom->evaluate(board, output);
+		//printf("%f %f %f %f\n", output[0], output[1], output[2], output[3]);
+                std::iota(sorted.begin(), sorted.end(), static_cast<size_t>(0));
+                std::sort(sorted.begin(), sorted.end(), [&](size_t a, size_t b){return output[a] > output[b];});
+                legalmove = false;
+		//if(genom->poolPointer->generation % 2)
+		    if(rng[omp_get_thread_num()].rand() < EPSILON_GREEDY)
+			std::random_shuffle(sorted.begin(), sorted.end());
+		
+                for(auto const& x : sorted){
+                    newBoard = move(board, x);
+                    if(newBoard != board){
+			boards.push_back(board);
+			actions.push_back(x);
+			genom->evaluate(newBoard, nextOutput);
+			//printf("%f\n", output[x]);
+			values.push_back( (getScore(newBoard) - getScore(board))/2048.0 + GAMMA * (*std::max_element(nextOutput.begin(), nextOutput.end())) );
+			//genom->evaluate(board, nextOutput);
+			//genom->backpropagation(output);
+			legalmove = true;
+                        board = newBoard;
+                        spawnTile(board);
+                        break;
+                    }
+                }
+                if(!legalmove)
+                    break;
+            }
+	}
+	for(unsigned int i = 0; i < actions.size(); ++i){
+	    genom->evaluate(boards[i], output);
+	    output[actions[i]] = values[i];
+	    genom->backpropagation(output);
+	}
+	actions.clear();
+	boards.clear();
+	values.clear();
+        
+    //}
+
     while(genom->precision > genom->poolPointer->targetPrecision){
         for(unsigned short run = 0; run < RUNS_PER_NETWORK; run++){
             board = initBoard();
@@ -251,10 +302,11 @@ void game_t::play(genome* genom){
                 std::iota(sorted.begin(), sorted.end(), static_cast<size_t>(0));
                 std::sort(sorted.begin(), sorted.end(), [&](size_t a, size_t b){return output[a] > output[b];});
                 legalmove = false;
+		
                 for(auto const& x : sorted){
                     newBoard = move(board, x);
                     if(newBoard != board){
-                        legalmove = true;
+			legalmove = true;
                         board = newBoard;
                         spawnTile(board);
                         break;

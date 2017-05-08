@@ -57,6 +57,8 @@ public:
 
     double              calculateNeuron(unsigned short neuronNumber);
     void                evaluate(uint64_t board, std::vector<double> &output);
+    double              calculateNeuronError(unsigned short neuronNumber);
+    void                backpropagation(std::vector<double> &target);
     bool                containsGene(gene *inputGene);
     unsigned short      randomNeuron(bool includeInput);
     bool                isInputNeuron(unsigned short neuronNumber);
