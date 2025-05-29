@@ -38,7 +38,7 @@ public:
     value_t         getCell(board_t board, index_t i, index_t j);
     void            spawnTile(board_t &board);
     score_t         getScore(board_t board);
-    value_t 		getMaxTile(board_t board);
+    value_t         getMaxTile(board_t board);
 
     board_t         transpose(board_t board);
     row_t           reverseRow(row_t row);
@@ -49,12 +49,12 @@ public:
     board_t         moveLeft(board_t board);
     board_t         moveUp(board_t board);
     board_t         moveDown(board_t board);
-    board_t			move(board_t board, move_t direction);
+    board_t	    move(board_t board, move_t direction);
 
-    void					getInput(board_t board, std::vector<double> &input);
+    void            getInput(board_t board, std::vector<double> &input);
     std::vector<move_t>		sortOutput(std::vector<double> &output);
 
     void	        play(genome* genom);
-    void 			learn();
+    void            learn();
 
 };

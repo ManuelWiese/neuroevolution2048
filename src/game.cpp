@@ -275,9 +275,7 @@ void game_t::learn(){
     pool mainPool(N*N*16, 4, POPULATION);
     //option to load savefile, not managed by commandline argument right now
     //pool mainPool = pool::load("");
-    //unsigned int counter = 0;
     while(true){
-        //counter++;
         std::vector<genome*> allGenomes;
         allGenomes.reserve(POPULATION);
         for(auto const& spec : mainPool.speciesVector)
