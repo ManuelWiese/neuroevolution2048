@@ -223,14 +223,14 @@ void pool::writeStats(){
         }
     }
     mean /= population;
+
     std::ofstream fileHandle;
     fileHandle.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    "
-               << mean << "    "
-               << targetPrecision << "    "
-               << min << "    "
-               << max << "    "
-               << std::endl;
+    fileHandle << generation << "\t"
+               << mean << "\t"
+               << targetPrecision << "\t"
+               << min << "\t"
+               << max << std::endl;
     fileHandle.close();
 
     //write tile probabilities
@@ -256,16 +256,16 @@ void pool::writeStats(){
         }
     }
     fileHandle.open(timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    ";
+    fileHandle << generation << "\t";
     for(auto const& prob : tileProbabilityGeneration)
-        fileHandle << prob << "    ";
+        fileHandle << prob << "\t";
     fileHandle << std::endl;
     fileHandle.close();
 
     fileHandle.open(timestamp + "_bestGenomeTileprobability.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    ";
+    fileHandle << generation << "\t";
     for(auto const& prob : bestTileProbability)
-        fileHandle << prob << "    ";
+        fileHandle << prob << "\t";
     fileHandle << std::endl;
     fileHandle.close();
 
@@ -278,16 +278,16 @@ void pool::writeStats(){
         }
     }
     fileHandle.open(timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    "
-               << meanMutationRates["weight"]/population << "    "
-               << meanMutationRates["link"]/population << "    "
-               << meanMutationRates["bias"]/population << "    "
-               << meanMutationRates["node"]/population << "    "
-               << meanMutationRates["enable"]/population<< "    "
-               << meanMutationRates["disable"]/population << "    "
-               << meanMutationRates["transfer"]/population << "    "
-               << meanMutationRates["delete"]/population << "    "
-               << meanMutationRates["step"]/population << "    ";
+    fileHandle << generation << "\t"
+               << meanMutationRates["weight"]/population << "\t"
+               << meanMutationRates["link"]/population << "\t"
+               << meanMutationRates["bias"]/population << "\t"
+               << meanMutationRates["node"]/population << "\t"
+               << meanMutationRates["enable"]/population<< "\t"
+               << meanMutationRates["disable"]/population << "\t"
+               << meanMutationRates["transfer"]/population << "\t"
+               << meanMutationRates["delete"]/population << "\t"
+               << meanMutationRates["step"]/population << "\t";
 
     fileHandle << std::endl;
     fileHandle.close();
@@ -314,30 +314,29 @@ void pool::writeStats(){
     }
 
     fileHandle.open(timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    "
-               << neurons/population << "    "
-               << activeInputNeurons/population << "    "
-               << mutableNeurons/population << "    "
-               << genes/population << "    "
-               << enabledGenes/population << "    "
-               << disabledGenes/population << "    "
-               << speciesVector.size() << "    "
-               << deltaThreshold << "   "
-               << std::endl;
+    fileHandle << generation << "\t"
+               << neurons/population << "\t"
+               << activeInputNeurons/population << "\t"
+               << mutableNeurons/population << "\t"
+               << genes/population << "\t"
+               << enabledGenes/population << "\t"
+               << disabledGenes/population << "\t"
+               << speciesVector.size() << "\t"
+               << deltaThreshold << std::endl;
     fileHandle.close();
 
     fileHandle.open(timestamp + "_fitness.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    ";
+    fileHandle << generation << "\t";
     for(auto const& spec : speciesVector)
         for(auto const& genom : spec->genomes)
-            fileHandle << genom->fitness << "    ";
+            fileHandle << genom->fitness << "\t";
     fileHandle << std::endl;
     fileHandle.close();
 
     fileHandle.open(timestamp + "_species.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "    ";
+    fileHandle << generation << "\t";
     for(auto const& spec : speciesVector)
-        fileHandle << spec->speciesNumber << "    " << spec->genomes.size() << "    ";
+        fileHandle << spec->speciesNumber << "\t" << spec->genomes.size() << "\t";
     fileHandle << std::endl;
     fileHandle.close();
 }
