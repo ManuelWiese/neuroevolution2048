@@ -392,14 +392,24 @@ void pool::calculateFitnessStats() {
 }
 
 void pool::writeGenerationStats() {
-    std::ofstream fileHandle;
-    fileHandle.open(runDir / "generation.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "\t"
-               << currentMeanFitness << "\t"
-               << targetPrecision << "\t"
-               << currentMinFitness << "\t"
-               << currentMaxFitness << std::endl;
-    fileHandle.close();
+  std::filesystem::path statsFile = runDir / "generation.csv";
+  bool fileExists = std::filesystem::exists(statsFile);
+
+  std::ofstream fileHandle(statsFile, std::ofstream::out | std::ofstream::app);
+
+  if (!fileHandle) {
+    throw std::runtime_error("Could not open generation.csv");
+  }
+
+  if (!fileExists) {
+    fileHandle << "generation,meanFitness,targetPrecision,minFitness,maxFitness" << std::endl;
+  }
+
+  fileHandle << generation << ","
+	     << currentMeanFitness << ","
+	     << targetPrecision << ","
+	     << currentMinFitness << ","
+	     << currentMaxFitness << std::endl;
 }
 
 bool pool::setPrecision(){
