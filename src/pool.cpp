@@ -388,7 +388,7 @@ void pool::writeMutationRateStats() {
 
   if (!fileExists) {
     fileHandle << "generation,"
-               << "weight,link,bias,node"
+               << "weight,link,bias,node,"
 	       << "enable,disable,transfer,delete,step"
                << std::endl;
   }
@@ -429,7 +429,7 @@ void pool::writeNetworkStats() {
 
   if (!fileExists) {
     fileHandle << "generation,"
-               << "neurons,activeInputNeurons,mutableNeurons,genes"
+               << "neurons,activeInputNeurons,mutableNeurons,genes,"
 	       << "enabledGenes,disabledGenes,species,deltaThreshold"
                << std::endl;
   }
