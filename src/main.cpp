@@ -11,19 +11,26 @@ std::uniform_real_distribution<> distribution(0, 1);
 
 std::vector<random_t> rng;
 
-int main(){
-    unsigned short threads;
-    #pragma omp parallel
-    {
-        #pragma omp single
-        {
-            threads = omp_get_num_threads();
-        }
-    }
-    for(unsigned short i = 0; i < threads; ++i)
-        rng.push_back(random_t());
 
-    game_t game;
-    game.learn();
-    return 0;
+void create_random_generators(){
+  unsigned short threads;
+  #pragma omp parallel
+  {
+    #pragma omp single
+    {
+      threads = omp_get_num_threads();
+    }
+  }
+  for(unsigned short i = 0; i < threads; ++i){
+    rng.push_back(random_t());
+  }
+}
+
+
+int main(){
+  game_t game;
+  create_random_generators();
+
+  game.learn();
+  return 0;
 }
