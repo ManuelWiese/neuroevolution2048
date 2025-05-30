@@ -2,10 +2,10 @@
 #define POOL_H
 
 #include "species.h"
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 class pool {
 public:
@@ -46,6 +46,9 @@ public:
   void writeStats();
   void calculateFitnessStats();
   void writeGenerationStats();
+  void writeTileProbabilityStats();
+  void writeTileProbabilityStatsFile(std::string filename,
+                                     std::vector<double> tileProbabilities);
   void newGeneration();
   bool setPrecision();
   void checkVariance();
