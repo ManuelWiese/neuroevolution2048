@@ -186,7 +186,7 @@ void pool::removeStaleSpecies(){
         //std::sort(speciesVector.begin(), speciesVector.end(), compareSpeciesByTopFitness);
         //survived.push_back(speciesVector[0]);
         printf("ERROR: survived.size() == 0");
-        exit;
+        exit(-1);
     }
     speciesVector = survived;
 }
