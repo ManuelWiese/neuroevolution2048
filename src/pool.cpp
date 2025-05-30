@@ -1,11 +1,17 @@
 
 #include "genome.h"
 #include "pool.h"
+#include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <limits>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <iomanip>
+
+
 pool::pool(){
     currentSpecies = 0;
     currentGenome = 0;
@@ -14,36 +20,22 @@ pool::pool(){
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
     char buffer[256];
     int len;
-    len = std::sprintf(buffer, "%sPOP%d_RUNS%d_DD%.3f_DW%.3fDB%.3f_DT%.3f_DR%.3f_THR%.3f_WR%.3f_BR%.3f_CULLMIN%d_STALE%d_PC%.3f_CC%.3f_LI%.3f_NO%.3f_BI%.3f_WE%.3f_TR%.3f_DI%.3f_EN%.3f_DE%.3f_STEP%.3f",
 
-		     
-                                NAME_PREFIX,
-                                POPULATION,
-                                RUNS_PER_NETWORK,
-                                DELTA_DISJOINT,
-                                DELTA_WEIGHTS,
-                                DELTA_BIAS,
-                                DELTA_TRANSFER,
-                                DELTA_RATES,
-                                DELTA_THRESHOLD,
-                                WEIGHT_RANGE,
-                                BIAS_RANGE,
-                                CULL_MINIMUM,
-                                STALE_SPECIES,
-                                PERTUBCHANCE,
-                                CROSSOVER_CHANCE,
-                                LINK_MUTATION_CHANCE,
-                                NODE_MUTATION_CHANCE,
-                                BIAS_MUTATION_CHANCE,
-                                WEIGHT_MUTATION_CHANCE,
-                                TRANSFER_MUTATION_CHANCE,
-                                DISABLE_MUTATION_CHANCE,
-                                ENABLE_MUTATION_CHANCE,
-                                DELETE_MUTATION_CHANCE,
-                                STEPSIZE
-                                );
-    //TODO: create timestamp using strstreamer?
-    timestamp.assign(buffer, len);
+    runDir = createRunDirectory();
+
+    len = std::sprintf(
+        buffer,
+        "%sPOP%d_RUNS%d_DD%.3f_DW%.3fDB%.3f_DT%.3f_DR%.3f_THR%.3f_WR%.3f_BR%."
+        "3f_CULLMIN%d_STALE%d_PC%.3f_CC%.3f_LI%.3f_NO%.3f_BI%.3f_WE%.3f_TR%.3f_"
+        "DI%.3f_EN%.3f_DE%.3f_STEP%.3f",
+        NAME_PREFIX, POPULATION, RUNS_PER_NETWORK, DELTA_DISJOINT,
+        DELTA_WEIGHTS, DELTA_BIAS, DELTA_TRANSFER, DELTA_RATES, DELTA_THRESHOLD,
+        WEIGHT_RANGE, BIAS_RANGE, CULL_MINIMUM, STALE_SPECIES, PERTUBCHANCE,
+        CROSSOVER_CHANCE, LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE,
+        BIAS_MUTATION_CHANCE, WEIGHT_MUTATION_CHANCE, TRANSFER_MUTATION_CHANCE,
+        DISABLE_MUTATION_CHANCE, ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE,
+        STEPSIZE);
+
     generation = 0;
     innovation = outputs;
     currentSpecies = 0;
@@ -71,6 +63,36 @@ pool::~pool(){
         }
         delete spec;
     }
+}
+
+std::string pool::getCurrentTimestamp() {
+  auto now = std::chrono::system_clock::now();
+  std::time_t timeNow = std::chrono::system_clock::to_time_t(now);
+  std::tm tm = *std::localtime(&timeNow);
+
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%Y%m%d%H%M%S");
+  return oss.str();
+}
+
+std::filesystem::path pool::createRunDirectory() {
+  std::filesystem::path baseDir = "runs";
+
+  if (!std::filesystem::exists(baseDir)) {
+    std::filesystem::create_directory(baseDir);
+  }
+
+  std::string timestamp = getCurrentTimestamp();
+  std::filesystem::path runDir = baseDir / timestamp;
+
+  if (std::filesystem::exists(runDir)) {
+    std::cout << "Rundir " << runDir << " already exists! Exiting" << std::endl;
+    exit(-1);
+  } else {
+    std::filesystem::create_directory(runDir);
+    std::cout << "Created run directory: " << runDir << std::endl;
+  }
+  return runDir;
 }
 
 unsigned int pool::newInnovation(){
@@ -225,7 +247,7 @@ void pool::writeStats(){
     mean /= population;
 
     std::ofstream fileHandle;
-    fileHandle.open(timestamp + "_generation.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "generation.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t"
                << mean << "\t"
                << targetPrecision << "\t"
@@ -255,14 +277,14 @@ void pool::writeStats(){
                 tileProbabilityGeneration[tile] += (tileProbability[tile]/genom->maxTile.size())/population;
         }
     }
-    fileHandle.open(timestamp + "_tileprobability.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "tileprobability.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t";
     for(auto const& prob : tileProbabilityGeneration)
         fileHandle << prob << "\t";
     fileHandle << std::endl;
     fileHandle.close();
 
-    fileHandle.open(timestamp + "_bestGenomeTileprobability.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "bestGenomeTileprobability.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t";
     for(auto const& prob : bestTileProbability)
         fileHandle << prob << "\t";
@@ -277,7 +299,7 @@ void pool::writeStats(){
                 meanMutationRates[mutation.first] += mutation.second;
         }
     }
-    fileHandle.open(timestamp + "_mutationrates.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "mutationrates.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t"
                << meanMutationRates["weight"]/population << "\t"
                << meanMutationRates["link"]/population << "\t"
@@ -313,7 +335,7 @@ void pool::writeStats(){
         }
     }
 
-    fileHandle.open(timestamp + "_stats.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "stats.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t"
                << neurons/population << "\t"
                << activeInputNeurons/population << "\t"
@@ -325,7 +347,7 @@ void pool::writeStats(){
                << deltaThreshold << std::endl;
     fileHandle.close();
 
-    fileHandle.open(timestamp + "_fitness.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "fitness.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t";
     for(auto const& spec : speciesVector)
         for(auto const& genom : spec->genomes)
@@ -333,7 +355,7 @@ void pool::writeStats(){
     fileHandle << std::endl;
     fileHandle.close();
 
-    fileHandle.open(timestamp + "_species.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle.open(runDir / "species.dat", std::ofstream::out | std::ofstream::app);
     fileHandle << generation << "\t";
     for(auto const& spec : speciesVector)
         fileHandle << spec->speciesNumber << "\t" << spec->genomes.size() << "\t";
@@ -481,11 +503,8 @@ void pool::nextGenome(){
 
 void pool::save(){
     std::ofstream ofs;
-    std::string filename = SAVEPATH + timestamp + "_" + std::to_string(generation) + ".save";
-    ofs.open (filename.c_str(), std::ofstream::out);
-
+    ofs.open (runDir / "savefile", std::ofstream::out);
     ofs << *this;
-
     ofs.close();
 }
 
@@ -498,7 +517,7 @@ pool pool::load(std::string filename){
 }
 
 std::ostream& operator<<(std::ostream& os, const pool& p){
-    os << p.timestamp << std::endl;
+    os << p.runDir << std::endl;
     os << p.generation << std::endl;
     os << p.innovation << std::endl;
 //    os << p.currentSpecies << std::endl;
@@ -517,7 +536,7 @@ std::ostream& operator<<(std::ostream& os, const pool& p){
 }
 
 std::istream& operator>>(std::istream& is, pool& p){
-    is >> p.timestamp;
+    is >> p.runDir;
     is >> p.generation;
     is >> p.innovation;
     p.currentSpecies = 0;
