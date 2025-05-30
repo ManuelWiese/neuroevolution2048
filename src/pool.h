@@ -22,6 +22,10 @@ public:
   double targetPrecision;
   double deltaThreshold;
 
+  double currentMeanFitness;
+  double currentMinFitness;
+  double currentMaxFitness;
+
   pool();
   pool(unsigned short inputs, unsigned short outputs,
        unsigned short population);
@@ -40,6 +44,8 @@ public:
   void addToSpecies(genome *child);
   void setMaxFitness();
   void writeStats();
+  void calculateFitnessStats();
+  void writeGenerationStats();
   void newGeneration();
   bool setPrecision();
   void checkVariance();

@@ -263,26 +263,10 @@ void pool::setMaxFitness(){
     }
 }
 
-void pool::writeStats(){
-    //Write generation data: mean, variance?, precision, bestOf a generation
-    double mean = 0.0, min = std::numeric_limits<double>::max(), max = std::numeric_limits<double>::min();
-    for(auto const& spec : speciesVector){
-        for(auto const& genom : spec->genomes){
-            mean += genom->fitness;
-            min = std::min(genom->fitness, min);
-            max = std::max(genom->fitness, max);
-        }
-    }
-    mean /= population;
-
+void pool::writeStats() {
+    calculateFitnessStats();
+    writeGenerationStats();
     std::ofstream fileHandle;
-    fileHandle.open(runDir / "generation.dat", std::ofstream::out | std::ofstream::app);
-    fileHandle << generation << "\t"
-               << mean << "\t"
-               << targetPrecision << "\t"
-               << min << "\t"
-               << max << std::endl;
-    fileHandle.close();
 
     //write tile probabilities
     std::vector<double> tileProbabilityGeneration(16, 0.0);
@@ -296,7 +280,7 @@ void pool::writeStats(){
                         tileProbability[tile]++;
                 }
             }
-            if(genom->fitness == max){
+            if(genom->fitness == currentMaxFitness){
                 bestTileProbability = tileProbability;
                 for(auto &tile : bestTileProbability)
                     tile /= genom->maxTile.size();
@@ -389,6 +373,32 @@ void pool::writeStats(){
     for(auto const& spec : speciesVector)
         fileHandle << spec->speciesNumber << "\t" << spec->genomes.size() << "\t";
     fileHandle << std::endl;
+    fileHandle.close();
+}
+
+void pool::calculateFitnessStats() {
+    currentMeanFitness = 0.0;
+    currentMinFitness = std::numeric_limits<double>::max();
+    currentMaxFitness = std::numeric_limits<double>::min();
+
+    for(auto const& spec : speciesVector){
+        for(auto const& genom : spec->genomes){
+            currentMeanFitness += genom->fitness;
+            currentMinFitness = std::min(genom->fitness, currentMinFitness);
+            currentMaxFitness = std::max(genom->fitness, currentMaxFitness);
+        }
+    }
+    currentMeanFitness /= population;
+}
+
+void pool::writeGenerationStats() {
+    std::ofstream fileHandle;
+    fileHandle.open(runDir / "generation.dat", std::ofstream::out | std::ofstream::app);
+    fileHandle << generation << "\t"
+               << currentMeanFitness << "\t"
+               << targetPrecision << "\t"
+               << currentMinFitness << "\t"
+               << currentMaxFitness << std::endl;
     fileHandle.close();
 }
 
