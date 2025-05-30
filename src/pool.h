@@ -52,6 +52,7 @@ public:
   void writeMutationRateStats();
   void writeNetworkStats();
   void writeFitnessStats();
+  void writeSpeciesStats();
   void newGeneration();
   bool setPrecision();
   void checkVariance();

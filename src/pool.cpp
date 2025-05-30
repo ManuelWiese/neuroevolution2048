@@ -273,15 +273,7 @@ void pool::writeStats() {
   writeMutationRateStats();
   writeNetworkStats();
   writeFitnessStats();
-  std::ofstream fileHandle;
-
-  fileHandle.open(runDir / "species.dat",
-                  std::ofstream::out | std::ofstream::app);
-  fileHandle << generation << "\t";
-  for (auto const &spec : speciesVector)
-    fileHandle << spec->speciesNumber << "\t" << spec->genomes.size() << "\t";
-  fileHandle << std::endl;
-  fileHandle.close();
+  writeSpeciesStats();
 }
 
 void pool::calculateFitnessStats() {
@@ -493,6 +485,25 @@ void pool::writeFitnessStats() {
                  << std::endl;
       index++;
     }
+}
+
+void pool::writeSpeciesStats() {
+  std::filesystem::path statsFile = runDir / "species.csv";
+  bool fileExists = std::filesystem::exists(statsFile);
+
+  std::ofstream fileHandle(statsFile, std::ofstream::out | std::ofstream::app);
+
+  if (!fileHandle) {
+    throw std::runtime_error("Could not open species.csv");
+  }
+
+  if (!fileExists) {
+    fileHandle << "generation,number,size" << std::endl;
+  }
+
+  for (auto const &spec : speciesVector)
+    fileHandle << generation << "," << spec->speciesNumber << "," << spec->genomes.size()
+                 << std::endl;
 }
 
 bool pool::setPrecision() {
