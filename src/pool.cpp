@@ -272,16 +272,8 @@ void pool::writeStats() {
   writeTileProbabilityStats();
   writeMutationRateStats();
   writeNetworkStats();
+  writeFitnessStats();
   std::ofstream fileHandle;
-
-  fileHandle.open(runDir / "fitness.dat",
-                  std::ofstream::out | std::ofstream::app);
-  fileHandle << generation << "\t";
-  for (auto const &spec : speciesVector)
-    for (auto const &genom : spec->genomes)
-      fileHandle << genom->fitness << "\t";
-  fileHandle << std::endl;
-  fileHandle.close();
 
   fileHandle.open(runDir / "species.dat",
                   std::ofstream::out | std::ofstream::app);
@@ -478,6 +470,29 @@ void pool::writeNetworkStats() {
              << "," << enabledGenes / population << ","
              << disabledGenes / population << "," << speciesVector.size()
              << "," << deltaThreshold << std::endl;
+}
+
+void pool::writeFitnessStats() {
+  std::filesystem::path statsFile = runDir / "fitness.csv";
+  bool fileExists = std::filesystem::exists(statsFile);
+
+  std::ofstream fileHandle(statsFile, std::ofstream::out | std::ofstream::app);
+
+  if (!fileHandle) {
+    throw std::runtime_error("Could not open fitness.csv");
+  }
+
+  if (!fileExists) {
+    fileHandle << "generation,index,fitness" << std::endl;
+  }
+
+  unsigned int index = 0;
+  for (auto const &spec : speciesVector)
+    for (auto const &genom : spec->genomes) {
+      fileHandle << generation << "," << index << "," << genom->fitness
+                 << std::endl;
+      index++;
+    }
 }
 
 bool pool::setPrecision() {
