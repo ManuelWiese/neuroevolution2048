@@ -1,188 +1,216 @@
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-import sys
+import argparse
+import csv
+import pathlib
 import random
 
-if len(sys.argv) != 2:
-	print("Usage: plot.py NAME")
-	quit()
-
-name = sys.argv[1]
-
-colors = ["#A00000", "#FF0000", "#FF8080","#FFC0C0", "#0000A0", "#0000FF", "#8080FF", "#C0C0FF", "#00A000", "#00FF00"]
-randomColors = [(random.random(), random.random(), random.random()) for i in range(1024)]
-
-generationFile = name +"_generation.dat"
-generationData = []
-with open(generationFile, "r") as f:
-	for line in f:
-		generationData.append([float(x) for x in line.split()])
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
-transposedGenerationData = list(zip(*generationData))
-fig1, ax11 = plt.subplots()
-ax11.set_xlabel('Generation')
-ax11.set_ylabel('Score')
+def main():
+        arguments = parse_arguments()
 
-ax11.plot(transposedGenerationData[0], transposedGenerationData[3], 'r')
-ax11.plot(transposedGenerationData[0], transposedGenerationData[1], 'b')
-ax11.plot(transposedGenerationData[0], transposedGenerationData[4], 'g')
+        plot_generation_statistics(arguments.run_dir)
 
-ax12 = ax11.twinx()
-ax12.set_ylabel('Precision')
+        plot_tile_probabilities(
+                arguments.run_dir,
+                "Mean tile probabilities",
+                "tileProbability.csv"
+        )
 
-ax12.plot(transposedGenerationData[0], transposedGenerationData[2], '0.75')
+        plot_tile_probabilities(
+                arguments.run_dir,
+                "Best genome tile probabilities",
+                "bestGenomeTileProbability.csv"
+        )
 
-fig1.tight_layout()
+        plot_mutation_rates(arguments.run_dir)
+        plot_network_stats(arguments.run_dir)
+        plot_fitness_heatmap(arguments.run_dir)
 
-tileProbabilityFile = name + "_tileprobability.dat"
-tileProbabilityData = []
-with open(tileProbabilityFile, "r") as f:
-	for line in f:
-		tileProbabilityData.append([float(x) for x in line.split()])
-
-transposedTileProbabilityData = list(zip(*tileProbabilityData))
-
-fig2, ax21 = plt.subplots()
-ax21.set_xlabel('Generation')
-ax21.set_ylabel('Success Rate')
-
-plt.ylim(-0.05, 1.1)
-
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[7], colors[0], label='64')
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[8], colors[1], label='128')
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[9], colors[2], label='256')
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[10], colors[3], label='512')
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[11], colors[4], label='1024')
-ax21.plot(transposedTileProbabilityData[0], transposedTileProbabilityData[12], colors[5], label='2048')
-
-ax21.legend(loc=9, ncol=6, mode="expand", borderaxespad=0.)
-
-fig2.tight_layout()
-
-bestGenomeTileProbabilityFile = name + "_bestGenomeTileprobability.dat"
-bestGenomeTileProbabilityData = []
-with open(bestGenomeTileProbabilityFile, "r") as f:
-	for line in f:
-		bestGenomeTileProbabilityData.append([float(x) for x in line.split()])
-
-transposedBestGenomeTileProbabilityData = list(zip(*bestGenomeTileProbabilityData))
-
-fig3, ax31 = plt.subplots()
-ax31.set_xlabel('Generation')
-ax31.set_ylabel('Success Rate')
-
-plt.ylim(-0.05, 1.1)
-
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[7], colors[0], label='64')
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[8], colors[1], label='128')
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[9], colors[2], label='256')
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[10], colors[3], label='512')
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[11], colors[4], label='1024')
-ax31.plot(transposedBestGenomeTileProbabilityData[0], transposedBestGenomeTileProbabilityData[12], colors[5], label='2048')
-
-ax31.legend(loc=9, ncol=6, mode="expand", borderaxespad=0.)
-
-fig3.tight_layout()
-
-mutationRatesFile = name + "_mutationrates.dat"
-mutationRatesData = []
-with open(mutationRatesFile, "r") as f:
-	for line in f:
-		mutationRatesData.append([float(x) for x in line.split()])
-
-transposedMutationRatesData = list(zip(*mutationRatesData))
-
-fig4, ax41 = plt.subplots()
-ax41.set_xlabel('Generation')
-ax41.set_ylabel('Mean Mutation Rates')
-
-weightHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[1], marker='.', label='weight')
-linkHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[2], marker='o', label='link')
-biasHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[3], marker='v', label='bias')
-nodeHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[4], marker='^', label='node')
-enableHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[5], marker='<', label='enable')
-disableHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[6], marker='>', label='disable')
-transferHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[7], marker='s', label='transfer')
-deleteHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[8], marker='p', label='delete')
-stepHandle = ax41.plot(transposedMutationRatesData[0], transposedMutationRatesData[9], marker='*', label='step')
+        plt.show()
 
 
-ax41.legend(loc=9, ncol=5, mode="expand", borderaxespad=0.)
+def parse_arguments():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("run_dir", type=pathlib.Path)
+        arguments = parser.parse_args()
 
-fig4.tight_layout()
+        return arguments
 
-statsFile = name + "_stats.dat"
-statsData = []
-with open(statsFile, "r") as f:
-	for line in f:
-		statsData.append([float(x) for x in line.split()])
 
-transposedStatsData = list(zip(*statsData))
+def plot_generation_statistics(run_dir: pathlib.Path):
+        data = pd.read_csv(run_dir / "generation.csv")
+        fig, ax1 = plt.subplots()
 
-fig5, ax51 = plt.subplots()
+        ax1.set_title("Fitness and Precision")
 
-plt.ylim(0, max(transposedStatsData[7])+1)
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Score")
 
-ax51.set_xlabel('Generation')
-ax51.set_ylabel('Number of Species')
+        ax1.plot(data["generation"], data["minFitness"], color="r", label="minFitness")
+        ax1.plot(data["generation"], data["maxFitness"], color="g", label="maxFitness")
+        ax1.plot(data["generation"], data["meanFitness"], color="b", label="meanFitness")
 
-ax51.plot(transposedStatsData[0], transposedStatsData[7])
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Precision")
 
-fig5.tight_layout()
+        ax2.plot(data["generation"], data["targetPrecision"], color='0.75', label="targetPrecision")
 
-fig6, ax61 = plt.subplots()
+        ax1.legend()
+        ax2.legend()
+        fig.tight_layout()
 
-ax62 = ax61.twinx()
 
-ax61.plot(transposedStatsData[0], transposedStatsData[1], color=colors[0], label='total neurons')
-ax61.plot(transposedStatsData[0], transposedStatsData[2], color=colors[1], label='active input neurons')
-ax61.plot(transposedStatsData[0], transposedStatsData[3], color=colors[2], label='mutable neurons')
-ax62.plot(transposedStatsData[0], transposedStatsData[4], color=colors[4], label='total genes')
-ax62.plot(transposedStatsData[0], transposedStatsData[5], color=colors[5], label='enabled genes')
-ax62.plot(transposedStatsData[0], transposedStatsData[6], color=colors[6], label='disabled genes')
+def plot_tile_probabilities(
+                run_dir: pathlib.Path,
+                title: str,
+                stats_file: str
+):
+        colors = [
+                "#A00000",
+                "#FF0000",
+                "#FF8080",
+                "#FFC0C0",
+                "#0000A0",
+                "#0000FF",
+                "#8080FF",
+                "#C0C0FF",
+                "#00A000",
+                "#00FF00"
+        ]
 
-ax61.legend(loc=2)
-ax62.legend(loc=3)
+        data = pd.read_csv(run_dir / stats_file)
 
-fitnessFile = name + "_fitness.dat"
-fitnessData = []
-with open(fitnessFile, "r") as f:
-	for line in f:
-		fitnessData.append([float(x) for x in line.split()])
+        fig, ax1 = plt.subplots()
 
-pointsX = [fitnessData[x][0] for x in range(len(fitnessData)) for y in range(1, len(fitnessData[0]))]
-pointsY = [fitnessData[x][y] for x in range(len(fitnessData)) for y in range(1, len(fitnessData[0]))]
-hist, xedges, yedges = np.histogram2d(pointsX, pointsY, bins=(len(fitnessData), 150))
-extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        ax1.set_title(title)
 
-fig6, ax61 = plt.subplots()
-plt.imshow(hist.T, extent=extent, origin='lower', aspect='auto', interpolation='none')
-plt.plot(transposedGenerationData[0], transposedGenerationData[3], 'r')
-plt.plot(transposedGenerationData[0], transposedGenerationData[1], 'b')
-plt.plot(transposedGenerationData[0], transposedGenerationData[4], 'g')
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Probability to reach tile")
 
-speciesFile = name + "_species.dat"
-speciesData = []
-with open(speciesFile, "r") as f:
-	for line in f:
-		speciesData.append([float(x) for x in line.split()])
+        ax1.set_ylim(-0.05, 1.05)
 
-fig7, ax71 = plt.subplots()
+        for index, tile in enumerate(("64", "128", "256", "512", "1024", "2048", "4096")):
+                ax1.plot(data["generation"], data[tile], colors[index], label=tile)
 
-for generation in range(len(speciesData)):
-	species = 1
-	populationSum = 0
-	while species < len(speciesData[generation]):
-		color = randomColors[int(speciesData[generation][species])%1024]
-		population = speciesData[generation][species+1]
-		x = [generation, generation+1]
-		y1 = [populationSum, populationSum]
-		y2 = [populationSum+population, populationSum+population]
-		ax71.fill_between(x, y1, y2, facecolor=color, lw=0.0)
-		#plt.plot()
-		species += 2
-		populationSum += population
+        ax1.legend(loc=9, ncol=6, mode="expand", borderaxespad=0.)
+        fig.tight_layout()
 
-plt.show()
+
+def plot_mutation_rates(run_dir: pathlib.Path):
+        data = pd.read_csv(run_dir / "mutationRates.csv")
+        fig, ax1 = plt.subplots()
+
+        ax1.set_title("Mutation Rates")
+
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Mean Mutation Rates")
+
+        markers = {
+                "weight": ".",
+                "link": "o",
+                "bias": "v",
+                "node": "^",
+                "enable": "<",
+                "disable": ">",
+                "transfer": "s",
+                "delete": "p",
+                "step": "*"
+        }
+
+        for label, marker in markers.items():
+                ax1.plot(data["generation"], data[label], marker=marker, label=label)
+
+        ax1.legend(loc=9, ncol=5, mode="expand", borderaxespad=0.)
+        fig.tight_layout()
+
+
+def plot_network_stats(run_dir: pathlib.Path):
+        data = pd.read_csv(run_dir / "network.csv")
+        fig, ax1 = plt.subplots()
+
+        ax1.set_title("Network Statistics")
+
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Count")
+
+        labels = (
+                "neurons",
+                "activeInputNeurons",
+                "mutableNeurons",
+                "genes",
+                "enabledGenes",
+                "disabledGenes",
+                "species"
+        )
+        for label in labels:
+                ax1.plot(data["generation"], data[label], label=label)
+
+        ax1.legend(loc=2)
+        fig.tight_layout()
+
+
+def plot_fitness_heatmap(run_dir: pathlib.Path):
+        data = pd.read_csv(run_dir / "fitness.csv")
+
+        X = data["generation"]
+        Y = data["fitness"]
+
+        hist, xedges, yedges = np.histogram2d(X, Y, bins=(max(data["generation"])+1, 150))
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+        fig, ax1 = plt.subplots()
+
+        ax1.set_title("Fitness Heatmap")
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Fitness")
+        
+        ax1.imshow(hist.T, extent=extent, origin="lower", aspect="auto", interpolation="none")
+        
+
+if __name__ == "__main__":
+        main()
+
+
+# name = arguments.base_name
+
+# colors = [
+#         "#A00000",
+#         "#FF0000",
+#         "#FF8080",
+#         "#FFC0C0",
+#         "#0000A0",
+#         "#0000FF",
+#         "#8080FF",
+#         "#C0C0FF",
+#         "#00A000",
+#         "#00FF00"
+# ]
+
+# randomColors = [(random.random(), random.random(), random.random()) for i in range(1024)]
+
+# speciesFile = name + "_species.dat"
+# speciesData = []
+# with open(speciesFile, "r") as f:
+# 	for line in f:
+# 		speciesData.append([float(x) for x in line.split()])
+
+# fig7, ax71 = plt.subplots()
+
+# for generation in range(len(speciesData)):
+# 	species = 1
+# 	populationSum = 0
+# 	while species < len(speciesData[generation]):
+# 		color = randomColors[int(speciesData[generation][species])%1024]
+# 		population = speciesData[generation][species+1]
+# 		x = [generation, generation+1]
+# 		y1 = [populationSum, populationSum]
+# 		y2 = [populationSum+population, populationSum+population]
+# 		ax71.fill_between(x, y1, y2, facecolor=color, lw=0.0)
+# 		#plt.plot()
+# 		species += 2
+# 		populationSum += population
+
+# plt.show()
