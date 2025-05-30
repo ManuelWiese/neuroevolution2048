@@ -270,33 +270,8 @@ void pool::writeStats() {
   calculateFitnessStats();
   writeGenerationStats();
   writeTileProbabilityStats();
+  writeMutationRateStats();
   std::ofstream fileHandle;
-
-  // write mean mutation rates
-  std::map<std::string, double> meanMutationRates = {
-      {"weight", 0.0},   {"link", 0.0},   {"bias", 0.0},
-      {"node", 0.0},     {"enable", 0.0}, {"disable", 0.0},
-      {"transfer", 0.0}, {"delete", 0.0}, {"step", 0.0}};
-  for (auto const &spec : speciesVector) {
-    for (auto const &genom : spec->genomes) {
-      for (auto const &mutation : genom->mutationRates)
-        meanMutationRates[mutation.first] += mutation.second;
-    }
-  }
-  fileHandle.open(runDir / "mutationrates.dat",
-                  std::ofstream::out | std::ofstream::app);
-  fileHandle << generation << "\t" << meanMutationRates["weight"] / population
-             << "\t" << meanMutationRates["link"] / population << "\t"
-             << meanMutationRates["bias"] / population << "\t"
-             << meanMutationRates["node"] / population << "\t"
-             << meanMutationRates["enable"] / population << "\t"
-             << meanMutationRates["disable"] / population << "\t"
-             << meanMutationRates["transfer"] / population << "\t"
-             << meanMutationRates["delete"] / population << "\t"
-             << meanMutationRates["step"] / population << "\t";
-
-  fileHandle << std::endl;
-  fileHandle.close();
 
   // write network statistics mean count of: neurons, active neurons, mutable
   // neurons, genes, enabled genes, disabled genes, deleted genes?
@@ -446,6 +421,47 @@ void pool::writeTileProbabilityStatsFile(
     fileHandle << "," << tileProbabilities[tile];
   }
   fileHandle << std::endl;
+}
+
+void pool::writeMutationRateStats() {
+  std::filesystem::path statsFile = runDir / "mutationRates.csv";
+  bool fileExists = std::filesystem::exists(statsFile);
+
+  std::ofstream fileHandle(statsFile, std::ofstream::out | std::ofstream::app);
+
+  if (!fileHandle) {
+    throw std::runtime_error("Could not open mutationRates.csv");
+  }
+
+  if (!fileExists) {
+    fileHandle << "generation,"
+               << "weight,link,bias,node"
+	       << "enable,disable,transfer,delete,step"
+               << std::endl;
+  }
+
+  std::map<std::string, double> meanMutationRates = {
+      {"weight", 0.0},   {"link", 0.0},   {"bias", 0.0},
+      {"node", 0.0},     {"enable", 0.0}, {"disable", 0.0},
+      {"transfer", 0.0}, {"delete", 0.0}, {"step", 0.0}};
+  for (auto const &spec : speciesVector) {
+    for (auto const &genom : spec->genomes) {
+      for (auto const &mutation : genom->mutationRates)
+        meanMutationRates[mutation.first] += mutation.second;
+    }
+  }
+
+  fileHandle << generation << ","
+	     << meanMutationRates["weight"] / population << ","
+	     << meanMutationRates["link"] / population << ","
+             << meanMutationRates["bias"] / population << ","
+             << meanMutationRates["node"] / population << ","
+             << meanMutationRates["enable"] / population << ","
+             << meanMutationRates["disable"] / population << ","
+             << meanMutationRates["transfer"] / population << ","
+             << meanMutationRates["delete"] / population << ","
+             << meanMutationRates["step"] / population
+	     << std::endl;
 }
 
 bool pool::setPrecision() {
