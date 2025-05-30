@@ -29,6 +29,7 @@ public:
 
   std::string getCurrentTimestamp();
   std::filesystem::path createRunDirectory();
+  void saveConstants();
 
   unsigned int newInnovation();
   void rankGenomes();

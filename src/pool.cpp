@@ -18,23 +18,8 @@ pool::pool(){
 }
 
 pool::pool(unsigned short inputs, unsigned short outputs, unsigned short population = POPULATION){
-    char buffer[256];
-    int len;
-
     runDir = createRunDirectory();
-
-    len = std::sprintf(
-        buffer,
-        "%sPOP%d_RUNS%d_DD%.3f_DW%.3fDB%.3f_DT%.3f_DR%.3f_THR%.3f_WR%.3f_BR%."
-        "3f_CULLMIN%d_STALE%d_PC%.3f_CC%.3f_LI%.3f_NO%.3f_BI%.3f_WE%.3f_TR%.3f_"
-        "DI%.3f_EN%.3f_DE%.3f_STEP%.3f",
-        NAME_PREFIX, POPULATION, RUNS_PER_NETWORK, DELTA_DISJOINT,
-        DELTA_WEIGHTS, DELTA_BIAS, DELTA_TRANSFER, DELTA_RATES, DELTA_THRESHOLD,
-        WEIGHT_RANGE, BIAS_RANGE, CULL_MINIMUM, STALE_SPECIES, PERTUBCHANCE,
-        CROSSOVER_CHANCE, LINK_MUTATION_CHANCE, NODE_MUTATION_CHANCE,
-        BIAS_MUTATION_CHANCE, WEIGHT_MUTATION_CHANCE, TRANSFER_MUTATION_CHANCE,
-        DISABLE_MUTATION_CHANCE, ENABLE_MUTATION_CHANCE, DELETE_MUTATION_CHANCE,
-        STEPSIZE);
+    saveConstants();
 
     generation = 0;
     innovation = outputs;
@@ -93,6 +78,50 @@ std::filesystem::path pool::createRunDirectory() {
     std::cout << "Created run directory: " << runDir << std::endl;
   }
   return runDir;
+}
+
+void pool::saveConstants() {
+  std::ofstream file(runDir / "config.txt");
+  if (!file) {
+    throw std::runtime_error("Could not open config.txt");
+  }
+
+  file << std::fixed << std::setprecision(6);
+
+  file << "POPULATION = " << POPULATION << std::endl
+       << "RUNS_PER_NETWORK = " << RUNS_PER_NETWORK << std::endl
+
+       << "DELTA_DISJOINT = " << DELTA_DISJOINT << std::endl
+       << "DELTA_WEIGHTS = " << DELTA_WEIGHTS << std::endl
+       << "DELTA_BIAS = " << DELTA_BIAS << std::endl
+       << "DELTA_TRANSFER = " << DELTA_TRANSFER << std::endl
+       << "DELTA_RATES = " << DELTA_RATES << std::endl
+       << "DELTA_THRESHOLD = " << DELTA_THRESHOLD << std::endl
+
+       << "WEIGHT_RANGE = " << WEIGHT_RANGE << std::endl
+       << "BIAS_RANGE = " << BIAS_RANGE << std::endl
+
+       << "CULL_MINIMUM = " << CULL_MINIMUM << std::endl
+       << "STALE_SPECIES = " << STALE_SPECIES << std::endl
+
+       << "PERTUBCHANCE = " << PERTUBCHANCE << std::endl
+       << "CROSSOVER_CHANCE = " << CROSSOVER_CHANCE << std::endl
+
+       << "LINK_MUTATION_CHANCE = " << LINK_MUTATION_CHANCE << std::endl
+       << "NODE_MUTATION_CHANCE = " << NODE_MUTATION_CHANCE << std::endl
+       << "BIAS_MUTATION_CHANCE = " << BIAS_MUTATION_CHANCE << std::endl
+       << "WEIGHT_MUTATION_CHANCE = " << WEIGHT_MUTATION_CHANCE << std::endl
+       << "TRANSFER_MUTATION_CHANCE = " << TRANSFER_MUTATION_CHANCE << std::endl
+       << "DISABLE_MUTATION_CHANCE = " << DISABLE_MUTATION_CHANCE << std::endl
+       << "ENABLE_MUTATION_CHANCE = " << ENABLE_MUTATION_CHANCE << std::endl
+       << "DELETE_MUTATION_CHANCE = " << DELETE_MUTATION_CHANCE << std::endl
+
+       << "STEPSIZE = " << STEPSIZE << std::endl
+
+       << "MUTATIONRATE_THRESHOLD = " << MUTATIONRATE_THRESHOLD << std::endl
+       << "MUTATIONRATE_FACTOR = " << MUTATIONRATE_FACTOR << std::endl
+
+       << "PRECISION = " << PRECISION << std::endl;
 }
 
 unsigned int pool::newInnovation(){
