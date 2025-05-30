@@ -271,39 +271,8 @@ void pool::writeStats() {
   writeGenerationStats();
   writeTileProbabilityStats();
   writeMutationRateStats();
+  writeNetworkStats();
   std::ofstream fileHandle;
-
-  // write network statistics mean count of: neurons, active neurons, mutable
-  // neurons, genes, enabled genes, disabled genes, deleted genes?
-  unsigned int neurons = 0, activeInputNeurons = 0, mutableNeurons = 0;
-  unsigned int genes = 0, disabledGenes = 0, enabledGenes = 0;
-  for (auto const &spec : speciesVector) {
-    for (auto const &genom : spec->genomes) {
-      genes += genom->genes.size();
-      for (auto const &gen : genom->genes) {
-        if (gen->enabled)
-          enabledGenes++;
-        else
-          disabledGenes++;
-      }
-      neurons += genom->neurons.size();
-      mutableNeurons += genom->neurons.size() - inputs;
-      for (auto const &neur : genom->inputActivated) {
-        if (neur)
-          activeInputNeurons++;
-      }
-    }
-  }
-
-  fileHandle.open(runDir / "stats.dat",
-                  std::ofstream::out | std::ofstream::app);
-  fileHandle << generation << "\t" << neurons / population << "\t"
-             << activeInputNeurons / population << "\t"
-             << mutableNeurons / population << "\t" << genes / population
-             << "\t" << enabledGenes / population << "\t"
-             << disabledGenes / population << "\t" << speciesVector.size()
-             << "\t" << deltaThreshold << std::endl;
-  fileHandle.close();
 
   fileHandle.open(runDir / "fitness.dat",
                   std::ofstream::out | std::ofstream::app);
@@ -462,6 +431,53 @@ void pool::writeMutationRateStats() {
              << meanMutationRates["delete"] / population << ","
              << meanMutationRates["step"] / population
 	     << std::endl;
+}
+
+void pool::writeNetworkStats() {
+  std::filesystem::path statsFile = runDir / "network.csv";
+  bool fileExists = std::filesystem::exists(statsFile);
+
+  std::ofstream fileHandle(statsFile, std::ofstream::out | std::ofstream::app);
+
+  if (!fileHandle) {
+    throw std::runtime_error("Could not open network.csv");
+  }
+
+  if (!fileExists) {
+    fileHandle << "generation,"
+               << "neurons,activeInputNeurons,mutableNeurons,genes"
+	       << "enabledGenes,disabledGenes,species,deltaThreshold"
+               << std::endl;
+  }
+
+  // write network statistics mean count of: neurons, active neurons, mutable
+  // neurons, genes, enabled genes, disabled genes, deleted genes?
+  unsigned int neurons = 0, activeInputNeurons = 0, mutableNeurons = 0;
+  unsigned int genes = 0, disabledGenes = 0, enabledGenes = 0;
+  for (auto const &spec : speciesVector) {
+    for (auto const &genom : spec->genomes) {
+      genes += genom->genes.size();
+      for (auto const &gen : genom->genes) {
+        if (gen->enabled)
+          enabledGenes++;
+        else
+          disabledGenes++;
+      }
+      neurons += genom->neurons.size();
+      mutableNeurons += genom->neurons.size() - inputs;
+      for (auto const &neur : genom->inputActivated) {
+        if (neur)
+          activeInputNeurons++;
+      }
+    }
+  }
+
+  fileHandle << generation << "," << neurons / population << ","
+             << activeInputNeurons / population << ","
+             << mutableNeurons / population << "," << genes / population
+             << "," << enabledGenes / population << ","
+             << disabledGenes / population << "," << speciesVector.size()
+             << "," << deltaThreshold << std::endl;
 }
 
 bool pool::setPrecision() {

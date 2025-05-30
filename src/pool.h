@@ -50,6 +50,7 @@ public:
   void writeTileProbabilityStatsFile(std::string filename,
                                      std::vector<double> tileProbabilities);
   void writeMutationRateStats();
+  void writeNetworkStats();
   void newGeneration();
   bool setPrecision();
   void checkVariance();
