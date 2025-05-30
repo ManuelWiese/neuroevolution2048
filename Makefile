@@ -10,11 +10,11 @@ ifndef CXX
 CXX := g++
 endif
 
-CC_FLAGS := -std=c++0x -O3 -fopenmp
+CC_FLAGS := -std=c++20 -O3 -fopenmp
 
 all: main
 
-debug: CC_FLAGS := -std=c++0x -O0 -g -fopenmp
+debug: CC_FLAGS := -std=c++20 -O0 -g -fopenmp
 debug: main
 
 main: $(OBJ_FILES)
@@ -24,7 +24,7 @@ obj/%.o: src/%.cpp folder
 	$(CXX) $(CC_FLAGS) -c -o $@ $<
 folder: 
 	mkdir -p $(OBJECTS_FOLDER)
-	
+
 clean:
 	rm -rf $(OBJECTS_FOLDER)
 	rm $(BIN_NAME)
